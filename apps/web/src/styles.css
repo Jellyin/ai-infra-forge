@@ -262,6 +262,18 @@ body {
 
 .empty { text-align: center; color: var(--text-muted); padding: var(--space-12); }
 
+/* ---------- 模态（数据面板） ---------- */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgb(0 0 0 / 0.55);
+  display: grid; place-items: center; padding: var(--space-4);
+}
+.modal {
+  background: var(--surface-1); border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-m); padding: var(--space-6);
+  max-width: 480px; width: 100%; box-shadow: var(--shadow-1);
+}
+
 /* ---------- Markdown 正文 ---------- */
 .md-body { margin-top: var(--space-3); border-left: 3px solid var(--border-hairline); padding-left: var(--space-4); max-width: 72ch; }
 .md-body .md-h { margin: var(--space-6) 0 var(--space-2); line-height: 1.3; color: var(--text-primary); }

@@ -7,6 +7,7 @@ import PathView from "./components/PathView.tsx";
 import Flashcards from "./components/Flashcards.tsx";
 import CommandTrainer from "./components/CommandTrainer.tsx";
 import Quiz from "./components/Quiz.tsx";
+import DataPanel from "./components/DataPanel.tsx";
 
 type Tab = "dashboard" | "path" | "flashcards" | "commands" | "quiz";
 
@@ -30,6 +31,7 @@ function tabFromHash(): Tab {
 export default function App() {
   const [tab, setTab] = useState<Tab>(tabFromHash);
   const [openModuleId, setOpenModuleId] = useState<string | null>(null);
+  const [showData, setShowData] = useState(false);
   const { theme, setTheme } = useTheme();
   const progress = useProgress();
   const path: PathContent | undefined = paths[0];
@@ -62,13 +64,19 @@ export default function App() {
           <h1 className="app-header__title">{path.title}</h1>
           <p className="app-header__subtitle">{path.subtitle}</p>
         </div>
-        <div className="theme-toggle" role="radiogroup" aria-label="主题选择">
-          {(["dark", "light", "system"] as const).map((t) => (
-            <button key={t} className={`theme-toggle__btn ${theme === t ? "theme-toggle__btn--on" : ""}`}
-              role="radio" aria-checked={theme === t} onClick={() => setTheme(t)}>
-              {t === "dark" ? "暗" : t === "light" ? "亮" : "系"}
-            </button>
-          ))}
+        <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
+          <button className="btn" onClick={() => setShowData(true)} aria-label="管理学习数据"
+            style={{ minHeight: 40, padding: "0 var(--space-3)", fontSize: "var(--fs-xs)" }}>
+            数据
+          </button>
+          <div className="theme-toggle" role="radiogroup" aria-label="主题选择">
+            {(["dark", "light", "system"] as const).map((t) => (
+              <button key={t} className={`theme-toggle__btn ${theme === t ? "theme-toggle__btn--on" : ""}`}
+                role="radio" aria-checked={theme === t} onClick={() => setTheme(t)}>
+                {t === "dark" ? "暗" : t === "light" ? "亮" : "系"}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -99,6 +107,8 @@ export default function App() {
           <Quiz path={path} progress={progress} />
         </div>
       </main>
+
+      {showData && <DataPanel progress={progress} onClose={() => setShowData(false)} />}
     </div>
   );
 }

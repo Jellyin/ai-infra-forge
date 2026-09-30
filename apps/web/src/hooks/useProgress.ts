@@ -63,7 +63,41 @@ export function useProgress() {
     recordActivity();
   }, [recordActivity]);
 
-  return { checklist, cards, commands, quiz, activity, toggleCheck, gradeCard, completeCommand, gradeQuiz };
+  /* ---------- 进度导出/导入（防丢失 + 换机 + 用户研究数据回收） ---------- */
+
+  const exportData = useCallback((): string => {
+    return JSON.stringify({
+      schema: 1,                       // 版本字段：未来结构变更时迁移用
+      exportedAt: new Date().toISOString(),
+      checklist, cards, commands, quiz, activity,
+    }, null, 2);
+  }, [checklist, cards, commands, quiz, activity]);
+
+  const importData = useCallback((json: string): { ok: boolean; message: string } => {
+    try {
+      const parsed = JSON.parse(json) as {
+        schema?: number;
+        checklist?: Record<string, boolean>;
+        cards?: Record<string, CardStateLite>;
+        commands?: Record<string, number>;
+        quiz?: Record<string, "known" | "unknown">;
+        activity?: Record<string, number>;
+      };
+      if (typeof parsed !== "object" || parsed === null) return { ok: false, message: "不是有效的导出文件" };
+      if (parsed.schema !== 1) return { ok: false, message: `未知的 schema 版本: ${String(parsed.schema)}` };
+      if (!parsed.checklist && !parsed.cards && !parsed.commands) return { ok: false, message: "文件里没有进度数据" };
+      setChecklist(parsed.checklist ?? {});
+      setCards(parsed.cards ?? {});
+      setCommands(parsed.commands ?? {});
+      setQuiz(parsed.quiz ?? {});
+      setActivity(parsed.activity ?? {});
+      return { ok: true, message: "导入成功" };
+    } catch {
+      return { ok: false, message: "JSON 解析失败" };
+    }
+  }, []);
+
+  return { checklist, cards, commands, quiz, activity, toggleCheck, gradeCard, completeCommand, gradeQuiz, exportData, importData };
 }
 
 interface CardStateLite { reps: number; interval: number; ease: number; due: number }
