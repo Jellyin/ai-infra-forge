@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   newCardState, sm2Next, cardMastery, buildCardQueue,
   scoreCommand, computeOverallProgress, isStreakDay, computeStreak, dateKey,
+  evaluateCompletion,
 } from "../src/index.ts";
 
 /* ---------- SM-2 ---------- */
@@ -116,4 +117,34 @@ test("computeStreak: 连续天数", () => {
   assert.equal(computeStreak(act, today), 3);
   assert.equal(isStreakDay(act, dateKey(new Date(2026, 8, 29))), true);
   assert.equal(isStreakDay(act, "2026-09-27"), false);
+});
+
+test("evaluateCompletion: 四路全达标才通关，任一短板即不通过", () => {
+  // 全达标
+  const pass = evaluateCompletion({
+    quizKnown: 9, quizTotal: 10,        // 90% ≥ 80%
+    cardsGood: 30, cardsTotal: 39,      // 77% ≥ 60%
+    commandsDone: 8, commandsTotal: 10, // 80% ≥ 60%
+    checklistDone: 38, checklistTotal: 41, // 93% ≥ 80%
+  });
+  assert.equal(pass.passed, true);
+  assert.ok(pass.score >= 75);
+
+  // 面试短板（7/10=70% < 80%）→ 不通关
+  const failQuiz = evaluateCompletion({
+    quizKnown: 7, quizTotal: 10,
+    cardsGood: 30, cardsTotal: 39,
+    commandsDone: 8, commandsTotal: 10,
+    checklistDone: 38, checklistTotal: 41,
+  });
+  assert.equal(failQuiz.passed, false);
+  const quizPart = failQuiz.parts.find((p) => p.key === "quiz")!;
+  const cardsPart = failQuiz.parts.find((p) => p.key === "cards")!;
+  assert.equal(quizPart.ok, false);
+  assert.equal(cardsPart.ok, true);
+
+  // 空数据不崩
+  const empty = evaluateCompletion({ quizKnown: 0, quizTotal: 0, cardsGood: 0, cardsTotal: 0, commandsDone: 0, commandsTotal: 0, checklistDone: 0, checklistTotal: 0 });
+  assert.equal(empty.passed, false);
+  assert.equal(empty.score, 0);
 });

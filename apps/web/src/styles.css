@@ -254,6 +254,7 @@ body {
 .quiz-item { background: var(--surface-1); border: 1px solid var(--border-hairline); border-radius: var(--radius-m); padding: var(--space-4); margin-bottom: var(--space-3); }
 .quiz-item__q { font-weight: 600; margin: 0 0 var(--space-3); min-height: 44px; display: flex; align-items: center; }
 .quiz-item__a { color: var(--text-secondary); border-left: 3px solid var(--series-1); padding-left: var(--space-3); margin: var(--space-3) 0; font-size: var(--fs-sm); }
+.card--passed { border-color: var(--status-good); }
 
 /* 主题切换 */
 .theme-toggle { display: inline-flex; border: 1px solid var(--border-hairline); border-radius: var(--radius-full); overflow: hidden; }

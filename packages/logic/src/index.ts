@@ -160,8 +160,53 @@ export function computeStreak(activity: ActivityMap | undefined, fromDate: Date 
   return streak;
 }
 
+/* ---------------- 4. 通关判定（多源，绝不用单一自评） ---------------- */
+
+export interface CompletionInput {
+  /** 面试题掌握数/总数 */
+  quizKnown: number; quizTotal: number;
+  /** 闪卡掌握（good 档）数/总数 */
+  cardsGood: number; cardsTotal: number;
+  /** 命令完成数/总数 */
+  commandsDone: number; commandsTotal: number;
+  /** 清单勾选数/总数 */
+  checklistDone: number; checklistTotal: number;
+}
+
+export interface CompletionPart {
+  key: "quiz" | "cards" | "commands" | "checklist";
+  ratio: number;   // 0~1
+  ok: boolean;
+  label: string;
+}
+
+export interface CompletionResult {
+  passed: boolean;
+  score: number;              // 0~100 综合分
+  parts: CompletionPart[];
+}
+
+/** 通关门槛：四路全部 ≥ 阈值（任一不达标即未通关）。
+ *  刻意苛刻：这是「可证明的掌握」，不是参与奖。 */
+export function evaluateCompletion(input: CompletionInput): CompletionResult {
+  const r = (a: number, b: number) => (b ? a / b : 0);
+  const quiz = r(input.quizKnown, input.quizTotal);
+  const cards = r(input.cardsGood, input.cardsTotal);
+  const commands = r(input.commandsDone, input.commandsTotal);
+  const checklist = r(input.checklistDone, input.checklistTotal);
+  const parts: CompletionPart[] = [
+    { key: "quiz", ratio: quiz, ok: quiz >= 0.8, label: "面试掌握 ≥ 80%" },
+    { key: "cards", ratio: cards, ok: cards >= 0.6, label: "闪卡掌握 ≥ 60%" },
+    { key: "commands", ratio: commands, ok: commands >= 0.6, label: "命令完成 ≥ 60%" },
+    { key: "checklist", ratio: checklist, ok: checklist >= 0.8, label: "清单勾选 ≥ 80%" },
+  ];
+  const score = Math.round((quiz * 0.3 + cards * 0.35 + commands * 0.2 + checklist * 0.15) * 100);
+  return { passed: parts.every((p) => p.ok), score, parts };
+}
+
 const Logic = {
   DAY_MS, newCardState, sm2Next, cardMastery, buildCardQueue,
   scoreCommand, computeOverallProgress, isStreakDay, computeStreak, dateKey,
+  evaluateCompletion,
 };
 export default Logic;
