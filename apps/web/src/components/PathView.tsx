@@ -5,23 +5,37 @@ import type { useProgress } from "../hooks/useProgress.ts";
 
 type Progress = ReturnType<typeof useProgress>;
 
-export default function PathView({ path, progress }: { path: PathContent; progress: Progress }) {
+interface Props {
+  path: PathContent;
+  progress: Progress;
+  openModuleId?: string | null;   // 外部（仪表盘）请求展开某模块
+  onModuleOpened?: () => void;    // 展开后回调（清外部请求）
+}
+
+export default function PathView({ path, progress, openModuleId, onModuleOpened }: Props) {
   const [open, setOpen] = useState<string | null>(path.modules[0]?.id ?? null);
   const [showGuide, setShowGuide] = useState<Record<string, boolean>>({});
+  const [showLab, setShowLab] = useState<Record<string, boolean>>({});
   const { checklist, toggleCheck } = progress;
+
+  /* 外部请求展开（仪表盘点击进度条）：受控覆盖本地 open */
+  const effectiveOpen = openModuleId ?? open;
+  const toggle = (id: string) => {
+    if (openModuleId) onModuleOpened?.();     // 先清外部请求，恢复本地控制
+    setOpen((o) => (o === id ? null : id));
+  };
 
   return (
     <div className="module-list">
       {path.modules.map((m) => {
-        const done = m.checklist.filter((_, i) => checklist[`${m.id}:${i}`]).length;
+        const done = m.checklist.filter((_, i) => checklist[`${path.id}:${m.id}:${i}`]).length;
         const pct = m.checklist.length ? Math.round((done / m.checklist.length) * 100) : 0;
-        const isOpen = open === m.id;
+        const isOpen = effectiveOpen === m.id;
         return (
           <section key={m.id} className="module-card">
-            <button className="module-card__head" onClick={() => setOpen(isOpen ? null : m.id)}
-              aria-expanded={isOpen} style={{ width: "100%", textAlign: "left", background: "transparent", border: "none", color: "inherit", font: "inherit" }}>
+            <button className="module-card__head" onClick={() => toggle(m.id)} aria-expanded={isOpen}>
               <span className="module-badge">{m.order}</span>
-              <h3 className="module-card__title">{m.title}</h3>
+              <span className="module-card__title">{m.title}</span>
               <span className="module-card__meta">{done}/{m.checklist.length} · {pct}%</span>
             </button>
 
@@ -49,9 +63,20 @@ export default function PathView({ path, progress }: { path: PathContent; progre
                   </div>
                 )}
 
+                {m.labMd && (
+                  <div style={{ margin: "var(--space-2) 0 var(--space-3)" }}>
+                    <button className="btn btn--primary" onClick={() => setShowLab((s) => ({ ...s, [m.id]: !s[m.id] }))} aria-expanded={!!showLab[m.id]}>
+                      {showLab[m.id] ? "🧪 收起实验" : "🧪 动手实验"}
+                    </button>
+                    {showLab[m.id] && (
+                      <div className="md-body md-body--lab" dangerouslySetInnerHTML={{ __html: renderMarkdown(m.labMd) }} />
+                    )}
+                  </div>
+                )}
+
                 <ul className="checklist">
                   {m.checklist.map((item, i) => {
-                    const key = `${m.id}:${i}`;
+                    const key = `${path.id}:${m.id}:${i}`;
                     return (
                       <li key={key} className="checklist__item">
                         <input id={key} type="checkbox" className="checklist__box"

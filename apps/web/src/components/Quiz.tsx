@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { PathContent } from "@aiforge/content-schema";
+import { quizKey } from "../lib/keys.ts";
 import type { useProgress } from "../hooks/useProgress.ts";
 
 type Progress = ReturnType<typeof useProgress>;
@@ -11,7 +12,7 @@ export default function Quiz({ path, progress }: { path: PathContent; progress: 
     const out: Array<{ key: string; q: string; a: string; moduleTitle: string }> = [];
     for (const m of path.modules)
       for (const item of m.quiz)
-        out.push({ key: `${m.id}:${item.q}`, q: item.q, a: item.a, moduleTitle: m.title });
+        out.push({ key: quizKey(path.id, m, item), q: item.q, a: item.a, moduleTitle: m.title });
     return out;
   }, [path]);
 
@@ -25,7 +26,7 @@ export default function Quiz({ path, progress }: { path: PathContent; progress: 
         <div className="stat-tile"><div className="stat-tile__value">{Math.round((known / flat.length) * 100)}%</div><div className="stat-tile__label">掌握率</div></div>
       </div>
 
-      <details className="quiz-item" key={flat[0]!.key}>
+      <details className="quiz-item">
         <summary style={{ cursor: "pointer", fontWeight: 600, minHeight: 44, display: "flex", alignItems: "center" }}>
           如何使用
         </summary>

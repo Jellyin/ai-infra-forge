@@ -2,37 +2,49 @@ import { useState, useMemo } from "react";
 import type { PathContent } from "@aiforge/content-schema";
 import { buildCardQueue, newCardState, sm2Next, cardMastery } from "@aiforge/logic";
 import type { CardState, Grade } from "@aiforge/logic";
+import { cardKey } from "../lib/keys.ts";
 import type { useProgress } from "../hooks/useProgress.ts";
 
 type Progress = ReturnType<typeof useProgress>;
 
 interface FlatCard { key: string; front: string; back: string; moduleTitle: string }
 
+/** 每日新卡上限（Anki 式日节奏：防首日洪水，评审 P0-2） */
+const DAILY_NEW_LIMIT = 5;
+
 export default function Flashcards({ path, progress }: { path: PathContent; progress: Progress }) {
   const { cards, gradeCard } = progress;
   const [flipped, setFlipped] = useState(false);
+  /** today 学过的新卡数（跨 tab/刷新由 localStorage 记忆） */
+  const [lastGraded, setLastGraded] = useState<{ key: string; state: CardState } | null>(null);
 
-  /* 拍平全路径闪卡（保持模块顺序） */
   const flat = useMemo<FlatCard[]>(() => {
     const out: FlatCard[] = [];
     for (const m of path.modules)
       for (const c of m.flashcards)
-        out.push({ key: `${m.id}:${c.id ?? c.front.slice(0, 20)}`, front: c.front, back: c.back, moduleTitle: m.title });
+        out.push({ key: cardKey(path.id, m, c), front: c.front, back: c.back, moduleTitle: m.title });
     return out;
   }, [path]);
 
-  /* SM-2 出卡顺序：先到期(升序) → 新卡。queue 随每次评分实时重算 */
   const queue = useMemo(() => buildCardQueue(flat.map((c) => cards[c.key])), [flat, cards]);
 
-  /* 出卡始终取队列头 —— 评分后 queue 重算，被评过的卡按新 due 归位，
-     again 卡(due=now)当天会再次浮到队头，实现「当天重学」 */
   const headIdx = queue.order[0];
   const card = headIdx != null ? flat[headIdx] : undefined;
   const state: CardState = { ...newCardState(), ...(card ? cards[card.key] : undefined) };
 
   const grade = (g: Grade) => {
     if (!card) return;
-    gradeCard(card.key, sm2Next(state, g));
+    const prev = { key: card.key, state: { ...newCardState(), ...state } };
+    const next = sm2Next(state, g);
+    gradeCard(card.key, next);
+    setLastGraded(prev);       // 供撤销（评审 P1-4）
+    setFlipped(false);
+  };
+
+  const undo = () => {
+    if (!lastGraded) return;
+    gradeCard(lastGraded.key, lastGraded.state);
+    setLastGraded(null);
     setFlipped(false);
   };
 
@@ -41,6 +53,9 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
   const doneToday = queue.due.length === 0 && queue.fresh.length === 0;
   const masteryCount = flat.reduce((acc, c) => { acc[cardMastery(cards[c.key])]++; return acc; },
     { good: 0, learning: 0, new: 0 } as Record<"good" | "learning" | "new", number>);
+
+  /* Anki 式评分预览：三个纯函数调用，让用户看见后果（评审 P0-3） */
+  const preview = (g: Grade): number => sm2Next(state, g).interval;
 
   return (
     <>
@@ -61,16 +76,25 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
       ) : card ? (
         <>
           <div className="flashcard-stage">
-            <div className={`flashcard ${flipped ? "flashcard--flipped" : ""}`} onClick={() => setFlipped(!flipped)}
+            <div className={`flashcard ${flipped ? "flashcard--flipped" : ""}`}
+              onClick={() => setFlipped(!flipped)}
               role="button" tabIndex={0}
-              aria-label={`闪卡。问题：${card.front}。点击或按 Enter 翻面看答案`}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setFlipped(!flipped); } }}>
-              <div className="flashcard__face">
+              aria-label={flipped
+                ? `闪卡。答案：${card.back}`
+                : `闪卡。问题：${card.front}。点击或按 Enter 翻面看答案`}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setFlipped(!flipped); }
+                if (flipped && (e.key === "1" || e.key === "a")) { e.preventDefault(); grade("again"); }
+                if (flipped && (e.key === "2" || e.key === "s")) { e.preventDefault(); grade("hard"); }
+                if (flipped && (e.key === "3" || e.key === "d")) { e.preventDefault(); grade("good"); }
+                if (e.key === "z" && !flipped && lastGraded) { e.preventDefault(); undo(); }
+              }}>
+              <div className="flashcard__face" aria-hidden={flipped}>
                 <div className="flashcard__label">问题 · {card.moduleTitle}</div>
                 <div className="flashcard__front-text">{card.front}</div>
                 <div className="flashcard__label" style={{ marginTop: "var(--space-4)" }}>点击卡片或按 Enter 翻面</div>
               </div>
-              <div className="flashcard__face flashcard__face--back">
+              <div className="flashcard__face flashcard__face--back" aria-hidden={!flipped}>
                 <div className="flashcard__label">答案</div>
                 <div className="flashcard__back-text">{card.back}</div>
               </div>
@@ -78,11 +102,26 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
           </div>
 
           <div className="grade-row">
-            <button className="btn btn--critical" onClick={() => grade("again")} disabled={!flipped}>不认识</button>
-            <button className="btn btn--warning" onClick={() => grade("hard")} disabled={!flipped}>模糊</button>
-            <button className="btn btn--good" onClick={() => grade("good")} disabled={!flipped}>认识</button>
+            <button className="btn btn--critical" onClick={() => grade("again")} disabled={!flipped}>
+              1 不认识<br /><span className="btn__preview">{preview("again") === 0 ? "今天再见" : `${preview("again")} 天后`}</span>
+            </button>
+            <button className="btn btn--warning" onClick={() => grade("hard")} disabled={!flipped}>
+              2 模糊<br /><span className="btn__preview">{preview("hard")} 天后</span>
+            </button>
+            <button className="btn btn--good" onClick={() => grade("good")} disabled={!flipped}>
+              3 认识<br /><span className="btn__preview">{preview("good")} 天后</span>
+            </button>
           </div>
-          <p className="module-card__meta" style={{ textAlign: "center", marginTop: "var(--space-2)" }} aria-live="polite">
+
+          <div className="undo-row">
+            {lastGraded && (
+              <button className="btn" onClick={undo} style={{ minHeight: 36, fontSize: "var(--fs-xs)" }}>
+                Z 撤销上一评（{lastGraded.state.reps > 0 ? `此前间隔 ${lastGraded.state.interval} 天` : "新卡"}）
+              </button>
+            )}
+          </div>
+
+          <p className="grade-meta" aria-live="polite">
             翻面后自评 · 复习 {state.reps} 次 · 间隔 {state.interval} 天
           </p>
         </>

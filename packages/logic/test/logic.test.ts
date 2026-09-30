@@ -45,6 +45,12 @@ test("Mastery: reps>=2 且 ease>=2.5 才算掌握", () => {
   assert.equal(cardMastery(s), "good");
 });
 
+test("Mastery: again 过的卡是 learning 不是 new（lapse ≠ never started）", () => {
+  let s = sm2Next(newCardState(), "good", 1000);
+  const lapsed = sm2Next(s, "again", 2000);  // reps=0, interval=0, due=2000
+  assert.equal(cardMastery(lapsed), "learning");
+});
+
 test("Queue: 到期卡优先(升序) → 新卡", () => {
   const states = [
     { ...newCardState(), reps: 2, interval: 6, due: 50 },

@@ -15,6 +15,7 @@ export type Flashcard = z.infer<typeof FlashcardSchema>;
 
 /* ---------- 命令训练 ---------- */
 export const CommandSchema = z.object({
+  id: z.string().optional(),          // 模块内唯一；缺省回退用 hint 作 key
   hint: z.string().min(1),
   cmd: z.string().min(1),
   module: z.string().optional(),
@@ -23,6 +24,7 @@ export type Command = z.infer<typeof CommandSchema>;
 
 /* ---------- 面试/自测 ---------- */
 export const QuizItemSchema = z.object({
+  id: z.string().optional(),          // 模块内唯一；缺省回退用 q 作 key
   q: z.string().min(1),
   a: z.string().min(1),
   module: z.string().optional(),

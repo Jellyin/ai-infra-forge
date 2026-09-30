@@ -4,7 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f9f9f7" media="(prefers-color-scheme: light)" />
     <title>AI Infra Forge · 学习路径平台</title>
+    <script>
+      // pre-paint 设主题，避免浅色用户加载闪一帧暗色（FOUC）
+      try {
+        var t = localStorage.getItem("aiforge:theme");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

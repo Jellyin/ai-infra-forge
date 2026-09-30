@@ -46,9 +46,11 @@ export function sm2Next(state: Partial<CardState>, grade: Grade, now: number = D
 
 export type Mastery = "good" | "learning" | "new";
 
-/** 掌握度分档 */
+/** 掌握度分档。注意与 buildCardQueue 的 fresh 判定对齐：
+ *  again 过的卡 reps=0 但 due≠0，是「学习中」不是「未开始」（lapse ≠ never started） */
 export function cardMastery(state?: Partial<CardState> | null): Mastery {
-  if (!state || (state.reps === 0 && !state.interval)) return "new";
+  if (!state) return "new";
+  if (state.reps === 0 && state.interval === 0 && state.due === 0) return "new";
   if ((state.reps ?? 0) >= 2 && (state.ease ?? 0) >= 2.5) return "good";
   return "learning";
 }

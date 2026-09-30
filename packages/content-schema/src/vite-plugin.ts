@@ -20,7 +20,7 @@ interface MinimalPlugin {
   handleHotUpdate: (ctx: { file: string; server: { ws: { send: (m: { type: string }) => void } } }) => void;
 }
 
-export function contentPlugin(contentRoot: string = resolve(process.cwd(), "../../content")): MinimalPlugin {
+export function contentPlugin(contentRoot: string = resolve(process.cwd(), "../../content")): MinimalPlugin & { configureServer?: (server: { watcher: { add: (p: string) => void } }) => void } {
   let data = "";
   const build = (): number => {
     const paths = loadPaths(contentRoot);
@@ -34,6 +34,11 @@ export function contentPlugin(contentRoot: string = resolve(process.cwd(), "../.
       const n = build();
       this.info?.(`[aiforge-content] 加载 ${n} 条路径 (from ${contentRoot})`);
     },
+    // dev 下把 content/ 纳入 watch（在 vite root 之外，默认不被监听——
+    // 否则改内容必须重启 dev server，handleHotUpdate 永远不触发）
+    configureServer(server) {
+      server.watcher.add(contentRoot);
+    },
     resolveId(id: string) {
       if (id === VIRTUAL_ID) return RESOLVED_ID;
       return undefined;
@@ -43,7 +48,8 @@ export function contentPlugin(contentRoot: string = resolve(process.cwd(), "../.
       return undefined;
     },
     handleHotUpdate({ file, server }: { file: string; server: { ws: { send: (m: { type: string }) => void } } }) {
-      if (file.includes("/content/")) { build(); server.ws.send({ type: "full-reload" }); }
+      const norm = file.replaceAll("\\", "/"); // Windows 反斜杠归一
+      if (norm.includes("/content/")) { build(); server.ws.send({ type: "full-reload" }); }
     },
   };
 }

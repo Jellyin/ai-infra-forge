@@ -71,11 +71,13 @@ interface CardStateLite { reps: number; interval: number; ease: number; due: num
 /** 主题 hook：dark/light/system 三态，localStorage 记忆 */
 export function useTheme() {
   const [theme, setTheme] = useState<"dark" | "light" | "system">(() => {
-    const t = localStorage.getItem(PREFIX + "theme");
-    return t === "light" || t === "dark" || t === "system" ? t : "dark";
+    try {
+      const t = localStorage.getItem(PREFIX + "theme");
+      return t === "light" || t === "dark" || t === "system" ? t : "dark";
+    } catch { return "dark"; }
   });
   useEffect(() => {
-    localStorage.setItem(PREFIX + "theme", theme);
+    try { localStorage.setItem(PREFIX + "theme", theme); } catch { /* 隐私模式降级 */ }
     if (theme === "system") document.documentElement.removeAttribute("data-theme");
     else document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
