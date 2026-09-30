@@ -58,21 +58,32 @@ test("Queue: 到期卡优先(升序) → 新卡", () => {
     { ...newCardState(), reps: 3, interval: 10, due: 30 },
     { ...newCardState(), reps: 5, interval: 20, due: 9999 },
   ];
-  const q = buildCardQueue(states, 100);
+  const q = buildCardQueue(states, 100, { dailyNewLimit: Infinity });
   assert.deepEqual(q.due, [2, 0]);
   assert.deepEqual(q.fresh, [1]);
   assert.deepEqual(q.order, [2, 0, 1]);
 });
 
+test("Queue: 每日新卡上限默认 5，超出进 cappedFresh", () => {
+  const states = Array.from({ length: 8 }, () => newCardState()); // 8 张全新卡
+  const q = buildCardQueue(states, 100);
+  assert.deepEqual(q.fresh, [0, 1, 2, 3, 4]);
+  assert.deepEqual(q.cappedFresh, [5, 6, 7]);
+  assert.equal(q.order.length, 5);
+
+  const qAll = buildCardQueue(states, 100, { dailyNewLimit: Infinity });
+  assert.equal(qAll.fresh.length, 8);
+});
+
 test("Queue: again 当天重学(due=now) 应进到期队列，不再算新卡", () => {
   const s = sm2Next(newCardState(), "good", 1000);   // 学过一次
   const again = sm2Next(s, "again", 2000);            // 然后忘了 → due=2000
-  const q = buildCardQueue([again], 2000);
+  const q = buildCardQueue([again], 2000, { dailyNewLimit: Infinity });
   assert.deepEqual(q.due, [0]);
   assert.deepEqual(q.fresh, []);
   // 已开始学但未到期的卡不算新卡
   const future = sm2Next(newCardState(), "good", 0); // due = now+1day
-  const q2 = buildCardQueue([future], 0);
+  const q2 = buildCardQueue([future], 0, { dailyNewLimit: Infinity });
   assert.deepEqual(q2.fresh, []);
   assert.deepEqual(q2.waiting, [0]);
 });

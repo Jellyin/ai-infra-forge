@@ -56,26 +56,39 @@ export function cardMastery(state?: Partial<CardState> | null): Mastery {
 }
 
 export interface CardQueue {
-  due: number[];      // 到期索引（按 due 升序）
-  fresh: number[];    // 新卡索引
-  waiting: number[];  // 未到期索引
-  order: number[];    // 出卡顺序：due → fresh
+  due: number[];         // 到期索引（按 due 升序）
+  fresh: number[];       // 新卡索引（受每日上限约束）
+  waiting: number[];     // 未到期索引
+  order: number[];       // 出卡顺序：due → fresh(限额内)
+  cappedFresh: number[]; // 因今日限额被推迟的新卡
 }
 
-/** 出卡队列：先到期(按 due 升序) → 新卡 */
-export function buildCardQueue(states: Array<Partial<CardState> | undefined>, now: number = Date.now()): CardQueue {
-  const due: number[] = [], fresh: number[] = [], waiting: number[] = [];
+export interface QueueOptions {
+  /** 每日新卡上限（Anki 式日节奏；默认 5，Infinity 不限制） */
+  dailyNewLimit?: number;
+}
+
+/** 出卡队列：先到期(按 due 升序) → 新卡（受每日上限） */
+export function buildCardQueue(
+  states: Array<Partial<CardState> | undefined>,
+  now: number = Date.now(),
+  opts: QueueOptions = {},
+): CardQueue {
+  const limit = opts.dailyNewLimit ?? 5;
+  const due: number[] = [], freshAll: number[] = [], waiting: number[] = [];
   states.forEach((st, i) => {
     const s: CardState = { ...newCardState(), ...st };
     // 新卡 = 从未有过任何复习痕迹；否则只要 due<=now（含 due=now 的 same-day 重学）就算到期
     const isFresh = s.reps === 0 && s.interval === 0 && s.due === 0;
-    if (isFresh) fresh.push(i);
+    if (isFresh) freshAll.push(i);
     else if (s.due <= now) due.push(i);
     else waiting.push(i);
   });
   const dueOf = (i: number): number => states[i]?.due ?? 0;
   due.sort((a, b) => dueOf(a) - dueOf(b));
-  return { due, fresh, waiting, order: [...due, ...fresh] };
+  const fresh = limit === Infinity ? freshAll : freshAll.slice(0, limit);
+  const cappedFresh = limit === Infinity ? [] : freshAll.slice(limit);
+  return { due, fresh, waiting, order: [...due, ...fresh], cappedFresh };
 }
 
 /* ---------------- 2. 命令逐字符比对 ---------------- */

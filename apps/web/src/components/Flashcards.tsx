@@ -27,6 +27,7 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
   }, [path]);
 
   const queue = useMemo(() => buildCardQueue(flat.map((c) => cards[c.key])), [flat, cards]);
+  const remaining = queue.order.length;   // 本次会话剩余（due + 限额内新卡）
 
   const headIdx = queue.order[0];
   const card = headIdx != null ? flat[headIdx] : undefined;
@@ -60,7 +61,7 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
   return (
     <>
       <div className="stat-grid" style={{ marginBottom: "var(--space-4)" }}>
-        <div className="stat-tile"><div className="stat-tile__value">{queue.due.length}</div><div className="stat-tile__label">今日待复习</div></div>
+        <div className="stat-tile"><div className="stat-tile__value">{remaining}</div><div className="stat-tile__label">本次剩余</div></div>
         <div className="stat-tile"><div className="stat-tile__value" style={{ color: "var(--status-good)" }}>{masteryCount.good}</div><div className="stat-tile__label">已掌握</div></div>
         <div className="stat-tile"><div className="stat-tile__value" style={{ color: "var(--status-warning)" }}>{masteryCount.learning}</div><div className="stat-tile__label">学习中</div></div>
         <div className="stat-tile"><div className="stat-tile__value">{masteryCount.new}</div><div className="stat-tile__label">未开始</div></div>

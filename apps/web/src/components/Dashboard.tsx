@@ -44,8 +44,7 @@ export default function Dashboard({ path, progress, onGoTab, onOpenModule }: Pro
       check: [doneChecks, totalChecks], cmd: [doneCmds, totalCmds],
       quiz: [knownQuiz, totalQuiz], mastery, totalCards,
       streak: computeStreak(activity),
-      dueToday: buildCardQueue(cardStates).due.length,
-      freshCount: buildCardQueue(cardStates).fresh.length,
+      dueToday: buildCardQueue(cardStates).order.length,   // due + 限额内新卡 = 今日可学
       totalChecks,
     };
   }, [path, checklist, cards, commands, quiz, activity]);
@@ -91,8 +90,8 @@ export default function Dashboard({ path, progress, onGoTab, onOpenModule }: Pro
         </div>
         <button className="stat-tile stat-tile--action" onClick={() => onGoTab?.("flashcards")}
           style={{ cursor: "pointer", textAlign: "left", font: "inherit" }}>
-          <div className="stat-tile__value">{stats.dueToday > 0 ? stats.dueToday : stats.freshCount}</div>
-          <div className="stat-tile__label">{stats.dueToday > 0 ? "今日待复习 →" : `新卡待学 →`}</div>
+          <div className="stat-tile__value">{stats.dueToday}</div>
+          <div className="stat-tile__label">今日待学 →</div>
         </button>
         <button className="stat-tile stat-tile--action" onClick={() => onGoTab?.("flashcards")}
           style={{ cursor: "pointer", textAlign: "left", font: "inherit" }}>
