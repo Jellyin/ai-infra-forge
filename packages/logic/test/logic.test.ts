@@ -58,6 +58,19 @@ test("Queue: 到期卡优先(升序) → 新卡", () => {
   assert.deepEqual(q.order, [2, 0, 1]);
 });
 
+test("Queue: again 当天重学(due=now) 应进到期队列，不再算新卡", () => {
+  const s = sm2Next(newCardState(), "good", 1000);   // 学过一次
+  const again = sm2Next(s, "again", 2000);            // 然后忘了 → due=2000
+  const q = buildCardQueue([again], 2000);
+  assert.deepEqual(q.due, [0]);
+  assert.deepEqual(q.fresh, []);
+  // 已开始学但未到期的卡不算新卡
+  const future = sm2Next(newCardState(), "good", 0); // due = now+1day
+  const q2 = buildCardQueue([future], 0);
+  assert.deepEqual(q2.fresh, []);
+  assert.deepEqual(q2.waiting, [0]);
+});
+
 /* ---------- 命令比对 ---------- */
 test("scoreCommand: 逐字符状态与完成判定", () => {
   const r = scoreCommand("ab cd", "ab xd");

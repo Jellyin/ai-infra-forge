@@ -65,7 +65,9 @@ export function buildCardQueue(states: Array<Partial<CardState> | undefined>, no
   const due: number[] = [], fresh: number[] = [], waiting: number[] = [];
   states.forEach((st, i) => {
     const s: CardState = { ...newCardState(), ...st };
-    if (s.reps === 0 && s.interval === 0 && s.due === 0) fresh.push(i);
+    // 新卡 = 从未有过任何复习痕迹；否则只要 due<=now（含 due=now 的 same-day 重学）就算到期
+    const isFresh = s.reps === 0 && s.interval === 0 && s.due === 0;
+    if (isFresh) fresh.push(i);
     else if (s.due <= now) due.push(i);
     else waiting.push(i);
   });
