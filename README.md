@@ -31,11 +31,23 @@ AI Infra Forge 把一条学习路径拆成四种训练方式，形成**可量化
 
 ## 快速开始
 
+### 方式一：本地开发
+
 ```bash
 # 需要 Node ≥22.6 与 pnpm ≥9
 pnpm install
 pnpm dev          # 打开 http://localhost:5173
 ```
+
+### 方式二：Docker 运行
+
+```bash
+docker compose up -d --build    # 打开 http://localhost:8080
+```
+
+多阶段构建：构建期把 content/ 编译进静态产物（保持「内容即数据、构建期加载」架构），运行时只有 nginx 静态服务，镜像极小、无运行时依赖。
+
+> 国内网络拉基础镜像超时的话，在 Docker Desktop → Settings → Docker Engine 里配置 `registry-mirrors` 后重试。
 
 ```bash
 pnpm test         # 运行学习逻辑单元测试

@@ -1,0 +1,8 @@
+services:
+  web:
+    build: .
+    image: ai-infra-forge:latest
+    container_name: aiforge-web
+    ports:
+      - "8080:80"
+    restart: unless-stopped
