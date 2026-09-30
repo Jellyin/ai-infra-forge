@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck（全包严格模式）
+        run: pnpm -r run typecheck
+
+      - name: Test（学习核心单测）
+        run: pnpm -r run test
+
+      - name: Content 校验（zod）
+        run: pnpm run validate:content
+
+      - name: Build（生产构建）
+        run: pnpm --filter web run build
+
+      - name: 上传构建产物（便于检查）
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: apps/web/dist
+          retention-days: 7
