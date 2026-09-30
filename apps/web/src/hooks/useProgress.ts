@@ -14,7 +14,12 @@ function read<T>(key: string, fallback: T): T {
   } catch { return fallback; }
 }
 function write(key: string, value: unknown) {
-  localStorage.setItem(PREFIX + key, JSON.stringify(value));
+  try {
+    localStorage.setItem(PREFIX + key, JSON.stringify(value));
+  } catch {
+    // localStorage 不可用（隐私模式/配额满）时静默降级：本次会话内进度仍有效
+    console.warn("[aiforge] localStorage 不可用，进度不会持久化");
+  }
 }
 
 /** 学习进度总状态 hook（闪卡/命令/清单/面试/活动 全在这） */

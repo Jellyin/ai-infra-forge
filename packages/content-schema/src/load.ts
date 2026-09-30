@@ -19,7 +19,8 @@ export function loadPaths(contentRoot: string): PathContent[] {
   if (!existsSync(pathsDir)) return [];
 
   const result: PathContent[] = [];
-  for (const pathId of readdirSync(pathsDir)) {
+  // 显式排序：多路径时顺序确定（readdirSync 顺序随文件系统不定）
+  for (const pathId of readdirSync(pathsDir).sort()) {
     const pdir = join(pathsDir, pathId);
     const pathRaw = readYaml(join(pdir, "path.yaml"));
     if (!pathRaw) continue;

@@ -11,9 +11,8 @@ interface FlatCard { key: string; front: string; back: string; moduleTitle: stri
 export default function Flashcards({ path, progress }: { path: PathContent; progress: Progress }) {
   const { cards, gradeCard } = progress;
   const [flipped, setFlipped] = useState(false);
-  const [cursor, setCursor] = useState(0);
 
-  /* 拍平全路径闪卡（保持模块顺序），生成 SM-2 状态视图 */
+  /* 拍平全路径闪卡（保持模块顺序） */
   const flat = useMemo<FlatCard[]>(() => {
     const out: FlatCard[] = [];
     for (const m of path.modules)
@@ -22,23 +21,22 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
     return out;
   }, [path]);
 
-  const queue = useMemo(() => {
-    const states = flat.map((c) => cards[c.key]);
-    return buildCardQueue(states);
-  }, [flat, cards]);
+  /* SM-2 出卡顺序：先到期(升序) → 新卡。queue 随每次评分实时重算 */
+  const queue = useMemo(() => buildCardQueue(flat.map((c) => cards[c.key])), [flat, cards]);
 
-  const card = flat[cursor] as FlatCard | undefined;
+  /* 出卡始终取队列头 —— 评分后 queue 重算，被评过的卡按新 due 归位，
+     again 卡(due=now)当天会再次浮到队头，实现「当天重学」 */
+  const headIdx = queue.order[0];
+  const card = headIdx != null ? flat[headIdx] : undefined;
   const state: CardState = { ...newCardState(), ...(card ? cards[card.key] : undefined) };
 
   const grade = (g: Grade) => {
     if (!card) return;
     gradeCard(card.key, sm2Next(state, g));
     setFlipped(false);
-    setCursor((c) => (c + 1) % Math.max(flat.length, 1));
   };
 
   if (!flat.length) return <p className="empty">本路径没有闪卡</p>;
-  if (!card) return null;
 
   const doneToday = queue.due.length === 0 && queue.fresh.length === 0;
   const masteryCount = flat.reduce((acc, c) => { acc[cardMastery(cards[c.key])]++; return acc; },
@@ -60,11 +58,13 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
             return next ? new Date(next).toLocaleString("zh-CN") : "暂无";
           })()}
         </p></div>
-      ) : (
+      ) : card ? (
         <>
           <div className="flashcard-stage">
             <div className={`flashcard ${flipped ? "flashcard--flipped" : ""}`} onClick={() => setFlipped(!flipped)}
-              role="button" tabIndex={0} aria-label="闪卡，点击翻面" onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setFlipped(!flipped); } }}>
+              role="button" tabIndex={0}
+              aria-label={`闪卡。问题：${card.front}。点击或按 Enter 翻面看答案`}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setFlipped(!flipped); } }}>
               <div className="flashcard__face">
                 <div className="flashcard__label">问题 · {card.moduleTitle}</div>
                 <div className="flashcard__front-text">{card.front}</div>
@@ -82,11 +82,11 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
             <button className="btn btn--warning" onClick={() => grade("hard")} disabled={!flipped}>模糊</button>
             <button className="btn btn--good" onClick={() => grade("good")} disabled={!flipped}>认识</button>
           </div>
-          <p className="module-card__meta" style={{ textAlign: "center", marginTop: "var(--space-2)" }}>
+          <p className="module-card__meta" style={{ textAlign: "center", marginTop: "var(--space-2)" }} aria-live="polite">
             翻面后自评 · 复习 {state.reps} 次 · 间隔 {state.interval} 天
           </p>
         </>
-      )}
+      ) : null}
     </>
   );
 }

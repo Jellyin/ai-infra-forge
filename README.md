@@ -32,7 +32,7 @@ AI Infra Forge 把一条学习路径拆成四种训练方式，形成**可量化
 ## 快速开始
 
 ```bash
-# 需要 Node ≥18 与 pnpm ≥9
+# 需要 Node ≥22.6 与 pnpm ≥9
 pnpm install
 pnpm dev          # 打开 http://localhost:5173
 ```

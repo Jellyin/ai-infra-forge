@@ -1,5 +1,6 @@
 /** 极简 markdown 渲染：支持标题/段落/代码块/列表/粗体/行内代码/表格/引用。
- * 不引入外部 md 库（内容受控，够用即可；表格转 <pre> 保持信息不丢）。 */
+ * 内容受控（zod 校验后进入），esc() 转义 & < > 阻断标签注入，无属性插值。
+ * 表格渲染为真正的 <table>（连续 | 行收集成块，分隔行跳过）。 */
 
 function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -10,38 +11,66 @@ function inline(s: string): string {
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
 }
 
+/** 一行 `| a | b |` → 单元格数组 */
+function splitRow(line: string): string[] {
+  return line.replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim());
+}
+
 export function renderMarkdown(md: string): string {
-  // 去 frontmatter
   const body = md.replace(/^---\n[\s\S]*?\n---\n/, "");
   const lines = body.split("\n");
   const out: string[] = [];
   let inCode = false, inList = false;
+  /** 收集中的表格行 */
+  let tableRows: string[] = [];
 
   const closeList = () => { if (inList) { out.push("</ul>"); inList = false; } };
+
+  const flushTable = () => {
+    if (!tableRows.length) return;
+    const rows = tableRows;
+    tableRows = [];
+    const cells0 = splitRow(rows[0] ?? "");
+    const hasHeader = rows.length > 1 && /^\|[\s:|-]+\|?$/.test((rows[1] ?? "").trim());
+    const bodyRows = hasHeader ? rows.slice(2) : rows;
+    const t: string[] = ['<table class="md-table">'];
+    if (hasHeader) {
+      t.push("<thead><tr>");
+      for (const c of cells0) t.push(`<th>${inline(c)}</th>`);
+      t.push("</tr></thead>");
+    }
+    t.push("<tbody>");
+    for (const r of bodyRows) {
+      t.push("<tr>");
+      for (const c of splitRow(r)) t.push(`<td>${inline(c)}</td>`);
+      t.push("</tr>");
+    }
+    t.push("</tbody></table>");
+    out.push(t.join(""));
+  };
 
   for (const raw of lines) {
     const line = raw ?? "";
     if (line.trim().startsWith("```")) {
+      flushTable();
       if (inCode) { out.push("</code></pre>"); inCode = false; }
       else { closeList(); out.push('<pre class="md-pre"><code>'); inCode = true; }
       continue;
     }
     if (inCode) { out.push(esc(line)); continue; }
 
-    if (/^\|/.test(line.trim())) {
-      // 表格行：逐行转 <pre> 太碎，攒到统一处理简化为文本块
-      if (out[out.length - 1] !== '<pre class="md-table-pre">') { closeList(); out.push('<pre class="md-table-pre">'); }
-      out.push(esc(line));
+    if (/^\s*\|/.test(line)) {
+      closeList();
+      tableRows.push(line.trim());
       continue;
-    } else if (out[out.length - 1] === '<pre class="md-table-pre">') {
-      out.push("</pre>");
     }
+    flushTable();
 
     const h = line.match(/^(#{1,6})\s+(.*)$/);
     if (h) {
       closeList();
-      const lvl = Math.min(h[1]!.length + 1, 6); // 正文里 h1 降一级，避免与页面标题冲突
-      out.push(`<h${lvl} class="md-h">${inline(h[2]!)}</h${lvl}>`);
+      const lvl = Math.min(h[1]!.length + 1, 6); // 正文 h1 降一级，避免与页面标题冲突
+      out.push(`<h${lvl} class="md-h">${inline(h[2] ?? "")}</h${lvl}>`);
       continue;
     }
     if (/^>\s?/.test(line)) {
@@ -63,8 +92,8 @@ export function renderMarkdown(md: string): string {
     closeList();
     out.push(`<p class="md-p">${inline(line)}</p>`);
   }
+  flushTable();
   if (inCode) out.push("</code></pre>");
   closeList();
-  if (out[out.length - 1] === '<pre class="md-table-pre">') out.push("</pre>");
   return out.join("\n");
 }

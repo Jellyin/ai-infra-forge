@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { PathContent } from "@aiforge/content-schema";
-import { computeStreak, cardMastery, buildCardQueue } from "@aiforge/logic";
+import { computeStreak, cardMastery, buildCardQueue, dateKey } from "@aiforge/logic";
 import type { useProgress } from "../hooks/useProgress.ts";
 
 type Progress = ReturnType<typeof useProgress>;
@@ -48,11 +48,12 @@ export default function Dashboard({ path, progress }: { path: PathContent; progr
   }, [path, checklist, cards, commands, quiz, activity]);
 
   const pct = Math.round(stats.overall * 100);
-  const days = 35; // 日历显示最近5周
+  const days = 35; // 日历显示最近5周（本地日期键，与 activity 一致）
   const cells = Array.from({ length: days }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (days - 1 - i));
-    return { key: d.toISOString().slice(0, 10), on: (activity[d.toISOString().slice(0, 10)] || 0) > 0, today: i === days - 1 };
+    const k = dateKey(d);
+    return { key: k, on: (activity[k] || 0) > 0, today: i === days - 1 };
   });
 
   return (
