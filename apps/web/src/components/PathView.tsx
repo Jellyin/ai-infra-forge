@@ -1,11 +1,13 @@
 import { useState } from "react";
 import type { PathContent } from "@aiforge/content-schema";
+import { renderMarkdown } from "./markdown.ts";
 import type { useProgress } from "../hooks/useProgress.ts";
 
 type Progress = ReturnType<typeof useProgress>;
 
 export default function PathView({ path, progress }: { path: PathContent; progress: Progress }) {
   const [open, setOpen] = useState<string | null>(path.modules[0]?.id ?? null);
+  const [showGuide, setShowGuide] = useState<Record<string, boolean>>({});
   const { checklist, toggleCheck } = progress;
 
   return (
@@ -33,6 +35,17 @@ export default function PathView({ path, progress }: { path: PathContent; progre
                 {m.concepts.length > 0 && (
                   <div className="concept-chips">
                     {m.concepts.map((c) => <span key={c} className="chip">{c}</span>)}
+                  </div>
+                )}
+
+                {m.guideMd && (
+                  <div style={{ margin: "var(--space-2) 0 var(--space-3)" }}>
+                    <button className="btn" onClick={() => setShowGuide((s) => ({ ...s, [m.id]: !s[m.id] }))} aria-expanded={!!showGuide[m.id]}>
+                      {showGuide[m.id] ? "📖 收起教程" : "📖 阅读教程"}
+                    </button>
+                    {showGuide[m.id] && (
+                      <div className="md-body" dangerouslySetInnerHTML={{ __html: renderMarkdown(m.guideMd) }} />
+                    )}
                   </div>
                 )}
 
