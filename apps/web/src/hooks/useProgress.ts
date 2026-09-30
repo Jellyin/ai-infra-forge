@@ -1,0 +1,78 @@
+/**
+ * 学习进度状态：localStorage 持久化 + activity/streak 记录。
+ * 所有学习动作都经过 recordActivity 驱动 streak。
+ */
+import { useState, useEffect, useCallback } from "react";
+import { dateKey, type ActivityMap } from "@aiforge/logic";
+
+const PREFIX = "aiforge:";
+
+function read<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(PREFIX + key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch { return fallback; }
+}
+function write(key: string, value: unknown) {
+  localStorage.setItem(PREFIX + key, JSON.stringify(value));
+}
+
+/** 学习进度总状态 hook（闪卡/命令/清单/面试/活动 全在这） */
+export function useProgress() {
+  const [checklist, setChecklist] = useState<Record<string, boolean>>(() => read("checklist", {}));
+  const [cards, setCards] = useState<Record<string, CardStateLite>>(() => read("cards", {}));
+  const [commands, setCommands] = useState<Record<string, number>>(() => read("commands", {}));
+  const [quiz, setQuiz] = useState<Record<string, "known" | "unknown">>(() => read("quiz", {}));
+  const [activity, setActivity] = useState<ActivityMap>(() => read("activity", {}));
+
+  useEffect(() => write("checklist", checklist), [checklist]);
+  useEffect(() => write("cards", cards), [cards]);
+  useEffect(() => write("commands", commands), [commands]);
+  useEffect(() => write("quiz", quiz), [quiz]);
+  useEffect(() => write("activity", activity), [activity]);
+
+  const recordActivity = useCallback(() => {
+    setActivity((prev) => {
+      const k = dateKey(new Date());
+      return { ...prev, [k]: (prev[k] || 0) + 1 };
+    });
+  }, []);
+
+  const toggleCheck = useCallback((key: string) => {
+    setChecklist((prev) => ({ ...prev, [key]: !prev[key] }));
+    recordActivity();
+  }, [recordActivity]);
+
+  const gradeCard = useCallback((key: string, next: CardStateLite) => {
+    setCards((prev) => ({ ...prev, [key]: next }));
+    recordActivity();
+  }, [recordActivity]);
+
+  const completeCommand = useCallback((key: string) => {
+    setCommands((prev) => ({ ...prev, [key]: (prev[key] || 0) + 1 }));
+    recordActivity();
+  }, [recordActivity]);
+
+  const gradeQuiz = useCallback((key: string, g: "known" | "unknown") => {
+    setQuiz((prev) => ({ ...prev, [key]: g }));
+    recordActivity();
+  }, [recordActivity]);
+
+  return { checklist, cards, commands, quiz, activity, toggleCheck, gradeCard, completeCommand, gradeQuiz };
+}
+
+interface CardStateLite { reps: number; interval: number; ease: number; due: number }
+
+/** 主题 hook：dark/light/system 三态，localStorage 记忆 */
+export function useTheme() {
+  const [theme, setTheme] = useState<"dark" | "light" | "system">(() => {
+    const t = localStorage.getItem(PREFIX + "theme");
+    return t === "light" || t === "dark" || t === "system" ? t : "dark";
+  });
+  useEffect(() => {
+    localStorage.setItem(PREFIX + "theme", theme);
+    if (theme === "system") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+  return { theme, setTheme };
+}

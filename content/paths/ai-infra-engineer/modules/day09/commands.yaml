@@ -1,0 +1,2 @@
+- hint: 实测推理服务冷启动耗时
+  cmd: kubectl scale deployment vllm --replicas=0 && time kubectl scale deployment vllm --replicas=1

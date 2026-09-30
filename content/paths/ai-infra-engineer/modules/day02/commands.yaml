@@ -1,0 +1,8 @@
+- hint: 起一个 Qwen 7B 推理服务
+  cmd: vllm serve Qwen/Qwen2.5-7B-Instruct --max-model-len 8192 --gpu-memory-utilization 0.9 --max-num-seqs 64 --port 8000
+- hint: 发一个非流式 chat 请求
+  cmd: 'curl http://localhost:8000/v1/chat/completions -H "Content-Type: application/json" -d ''{"model":"Qwen/Qwen2.5-7B-Instruct","messages":[{"role":"user","content":"你好"}]}'''
+- hint: 发一个流式请求(注意 -N)
+  cmd: 'curl -N http://localhost:8000/v1/chat/completions -H "Content-Type: application/json" -d ''{"model":"Qwen/Qwen2.5-7B-Instruct","messages":[{"role":"user","content":"你好"}],"stream":true}'''
+- hint: 看 vLLM 关键指标
+  cmd: curl -s localhost:8000/metrics | grep -E "vllm:(time_to_first_token|num_requests|gpu_cache_usage|avg_.*throughput)"

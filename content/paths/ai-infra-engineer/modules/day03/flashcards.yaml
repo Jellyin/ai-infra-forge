@@ -1,0 +1,12 @@
+- id: day03-c1
+  front: 为什么 GPU 利用率 100% 不代表高效？
+  back: Decode 是显存带宽密集，GPU 可能算得快但大部分时间在等显存搬运数据。要结合 tokens/s 和 MFU 看，单看利用率会误判。
+- id: day03-c2
+  front: MIG 和 MPS 的区别和选型？
+  back: MIG 硬件级切分(硬隔离，适合多租户安全)；MPS 多进程共享(软共享，提高利用率但无隔离)。卖卡选 MIG，卖 tokens 可选共享池。
+- id: day03-c3
+  front: 怎么算权重显存？(给公式)
+  back: 权重显存 = 参数量 × 精度字节数。FP16=2字节、FP8=1字节、INT4=0.5字节。例：70B FP16=140GB，FP8=70GB，INT4=35GB。
+- id: day03-c4
+  front: 每 token KV Cache 显存怎么算？
+  back: ≈2×层数×KV头数×头维度×精度字节。例 Llama-70B(80层/8头/128维/FP16)≈0.31MB/token，1M token 上下文≈310GB——长上下文显存爆炸的来源。

@@ -1,0 +1,26 @@
+{
+  "name": "@aiforge/content-schema",
+  "version": "0.1.0",
+  "description": "内容类型定义 + zod 校验 + 构建期内容加载",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./vite-plugin": "./src/vite-plugin.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "validate": "node --experimental-strip-types src/validate.ts"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^26.6.3",
+    "typescript": "^5.5.0"
+  }
+}

@@ -1,0 +1,19 @@
+id: day01
+title: 大模型推理基础
+goal: 把「服务」换成「模型」的认知重构
+order: 1
+read: 20
+lab: 30
+concepts:
+  - 三点本质差异(资源/状态/响应)
+  - Prefill vs Decode
+  - KV Cache
+  - TTFT/TPOT
+  - Continuous Batching
+  - PagedAttention
+checklist:
+  - 能说出 LLM 推理 vs 传统服务三点本质差异
+  - 能解释 Prefill 吃算力、Decode 吃带宽
+  - 能解释 KV Cache 为什么决定并发上限
+  - 能区分 TTFT 和 TPOT 各自管什么
+  - 写一张 300 字的对照表(大模型 vs 传统服务)

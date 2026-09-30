@@ -1,0 +1,17 @@
+id: day03
+title: GPU 硬件与显存
+goal: 从 CPU 运维切换到 GPU 运维的资源心智
+order: 3
+read: 25
+lab: 30
+concepts:
+  - 算力 vs 显存带宽
+  - 显存层级
+  - NVLink/InfiniBand
+  - MIG/MPS
+  - 显存预算公式
+checklist:
+  - 能解释为什么 GPU 利用率 100% 不等于高效
+  - 能说出 MIG 和 MPS 的隔离差异和选型
+  - 会用「参数量×精度字节」算权重显存
+  - 完成 3 道显存算账题

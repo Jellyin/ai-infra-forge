@@ -1,0 +1,17 @@
+id: day05
+title: 推理引擎原理
+goal: 吃透三个决定性能的机制
+order: 5
+read: 25
+lab: 40
+concepts:
+  - Continuous Batching
+  - PagedAttention
+  - Prefix Caching
+  - 调优参数全景
+  - SGLang/TRT-LLM 对比
+checklist:
+  - 能讲清 Continuous Batching 解决什么
+  - 能讲清 PagedAttention 解决什么
+  - 能说清 5 个调优参数各动什么瓶颈
+  - 完成 3 组调优对照实验并记录结果

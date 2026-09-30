@@ -1,0 +1,12 @@
+- id: day06-c1
+  front: FP8 和 INT4 量化怎么选？
+  back: FP8(H100+ 原生)精度损失极小、是生产主流；INT4(GPTQ/AWQ)省一半显存、适合显存紧张或大模型压小卡，但精度要实测。平台通常提供两档让用户选。
+- id: day06-c2
+  front: TP / PP / DP 三种并行的区别？
+  back: TP 张量并行(一层内切多卡，NVLink，单机内首选)；PP 流水线并行(按层切，通信少但利用率低，跨机)；DP 数据并行(多副本，水平扩容的本质)。
+- id: day06-c3
+  front: Prefill/Decode 分离(Disaggregation)是什么？
+  back: 把吃算力的 Prefill 和吃带宽的 Decode 拆到不同 GPU 池，各自选最合适硬件、各自独立伸缩。是当前头部推理平台的重点演进方向。
+- id: day06-c4
+  front: MoE 模型推理有什么特殊性？
+  back: 参数总量大(如671B)但每次只激活一部分专家(37B)。全量参数要放显存，但计算量只按激活参数算——调度和显存管理都不同。

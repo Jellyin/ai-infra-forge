@@ -1,0 +1,4 @@
+- hint: 装 GPU Operator(一键 GPU 栈)
+  cmd: helm install --wait --generate-name -n gpu-operator --create-namespace nvidia/gpu-operator
+- hint: 确认 GPU 变成可调度资源
+  cmd: 'kubectl get nodes -o json | jq ''.items[].status.allocatable | {gpu: .["nvidia.com/gpu"]}'''

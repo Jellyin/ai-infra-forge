@@ -1,0 +1,9 @@
+- id: day09-c1
+  front: 推理服务扩容为什么慢？怎么优化？
+  back: 要加载几十GB权重到显存(分钟级)。优化：模型预加载池/热备、权重预热+P2P分发(Dragonfly)、保持最小副本数避免冷启动惩罚。
+- id: day09-c2
+  front: 为什么伸缩要看排队深度而不是 CPU？
+  back: 显存打满时 CPU 可能还很空闲，按 CPU 伸缩会误判。要用 KEDA 按 vllm:num_requests_waiting 排队深度伸缩。
+- id: day09-c3
+  front: 列出 6 个 GPU 成本优化(FinOps)手段
+  back: ① 连续批处理提利用率；② Spot 跑离线批处理；③ 语义+前缀缓存省算力；④ INT4/FP8 量化；⑤ 弹性伸缩避免空转；⑥ MIG 切分小模型。

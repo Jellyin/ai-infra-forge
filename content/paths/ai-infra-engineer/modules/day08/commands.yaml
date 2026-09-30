@@ -1,0 +1,4 @@
+- hint: 起 DCGM Exporter 看硬件指标
+  cmd: docker run -d --gpus all --rm -p 9400:9400 nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04
+- hint: 看 DCGM 关键硬件指标
+  cmd: curl -s localhost:9400/metrics | grep DCGM_FI_DEV

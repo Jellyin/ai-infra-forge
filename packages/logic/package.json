@@ -1,0 +1,20 @@
+{
+  "name": "@aiforge/logic",
+  "version": "0.1.0",
+  "description": "学习科学核心：SM-2 间隔重复 / 命令逐字符比对 / 进度聚合 / 连续学习",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --experimental-strip-types --test test/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "typescript": "^5.5.0"
+  }
+}

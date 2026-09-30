@@ -1,0 +1,12 @@
+- id: day02-c1
+  front: vLLM 的接口是什么标准？为什么重要？
+  back: OpenAI 兼容接口(/v1/chat/completions)，是 MaaS 平台事实标准——所有引擎都兼容，客户零迁移成本。
+- id: day02-c2
+  front: num_requests_waiting 持续升高说明什么？
+  back: 说明请求在排队，需要扩容或调大并发(max-num-seqs)。它是两个「水位计」之一。
+- id: day02-c3
+  front: gpu_cache_usage_perc 接近 100% 说明什么？
+  back: 说明 KV Cache 显存打满，是显存瓶颈而非算力瓶颈。两个「水位计」之二。
+- id: day02-c4
+  front: 压测要找的「吞吐拐点」是什么？
+  back: 并发↑时吞吐先升后平，显存打满后到顶，再往上只增加排队和延迟。拐点对应的并发数就是该模型/卡/负载的最优并发。

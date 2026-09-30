@@ -1,0 +1,12 @@
+- id: day05-c1
+  front: '--max-num-seqs 调大/调小各什么后果？'
+  back: 调大：吞吐↑但 TTFT/TPOT↑(延迟变差)；调小：并发低、GPU 空转。在吞吐和延迟间权衡。
+- id: day05-c2
+  front: '--gpu-memory-utilization 设多少？为什么？'
+  back: 建议 0.85~0.9。太高易 OOM(KV Cache 打满)，太低浪费显存。它控制预留多少显存给 KV Cache 池。
+- id: day05-c3
+  front: Prefix Caching 适用什么场景？
+  back: 长 system prompt、多轮对话、RAG、Agent——多请求共享相同前缀，只算一次，吞吐可提升数倍。监控 gpu_prefix_cache_hit_rate。
+- id: day05-c4
+  front: vLLM / SGLang / TensorRT-LLM 怎么选？
+  back: vLLM 生态最大是默认首选；SGLang 在 Agent/长前缀/结构化输出更强；TensorRT-LLM 极致性能但配置复杂。MaaS 平台通常多引擎并存，统一封装成 OpenAI 接口。

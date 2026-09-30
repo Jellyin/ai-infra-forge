@@ -1,0 +1,12 @@
+- id: day10-c1
+  front: MaaS 平台需要哪些核心能力？
+  back: 模型管理(版本/格式)、多租户(隔离/配额/计费)、推理编排(统一OpenAI接口)、路由发现、灰度发布、可观测审计、安全合规。
+- id: day10-c2
+  front: 「TTFT P99 从1s飙到8s」怎么排查？
+  back: 分层：① num_requests_waiting(是否排队)→② gpu_cache_usage_perc(显存是否打满)→③ 是否长 prompt 抢占→④ 算力vs带宽瓶颈→⑤ 硬件(XID/温度/降频)。
+- id: day10-c3
+  front: 「生成到一半断了」怎么查？
+  back: 优先怀疑网关超时(SSE长连接被默认超时掐)→其次显存OOM(KV Cache打满触发驱逐)→再次 LB 空闲回收长连接。
+- id: day10-c4
+  front: 「要上新模型」怎么规划部署？
+  back: 算权重显存→定量化等级和TP切分→估KV Cache需求→压测定max-num-seqs→配监控告警→灰度上线。

@@ -1,0 +1,9 @@
+- id: day04-c1
+  front: GPU 进 K8s 需要哪条链路？
+  back: Driver → nvidia-container-toolkit → nvidia-device-plugin(暴露 nvidia.com/gpu) → gpu-operator 一键封装。容器看不到 GPU 多半是 toolkit 没装。
+- id: day04-c2
+  front: 为什么原生 K8s 调度器不够，要 Volcano？
+  back: 原生只认「有没有空闲卡」，AI 负载需要 gang scheduling(要么8卡一起要么不上)、队列配额、优先级抢占、拓扑感知。
+- id: day04-c3
+  front: GPU 碎片化是什么？怎么解决？
+  back: 8 个小 Pod 各占 1 卡，大模型要 8 卡整机永远凑不齐。解法：gang scheduling、节点池隔离(整机池+共享池)、Karpenter 按机型拉整机。

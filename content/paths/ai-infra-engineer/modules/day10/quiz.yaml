@@ -1,0 +1,30 @@
+- id: day10-q1
+  q: LLM 推理 vs 传统服务的本质区别？
+  a: 资源(显存)/状态(KV Cache)/响应(流式)三点。
+- id: day10-q2
+  q: Prefill 和 Decode 吃什么资源？
+  a: Prefill 吃算力，Decode 吃显存带宽。
+- id: day10-q3
+  q: Continuous Batching 和 PagedAttention？
+  a: 前者解决 GPU 空等，后者解决显存碎片。
+- id: day10-q4
+  q: TTFT 和 TPOT 怎么优化？
+  a: TTFT 优化 Prefill(分块/FP8/减排队)，TPOT 优化 Decode(控并发/投机采样)。
+- id: day10-q5
+  q: 70B 模型两块 A100-80G 怎么部署？
+  a: FP8+TP=2 或 INT4。FP16 140G 权重后 KV 不够。
+- id: day10-q6
+  q: GPU 利用率 100% 就高效吗？
+  a: 不一定，Decode 是带宽密集，要结合 tokens/s 和 MFU。
+- id: day10-q7
+  q: 推理扩容为什么慢？怎么优化？
+  a: 加载权重到显存分钟级。预热+热备+P2P+保最小副本。
+- id: day10-q8
+  q: 怎么给推理平台做监控告警？
+  a: DCGM 硬件层+vLLM 服务层双层指标+SLO。
+- id: day10-q9
+  q: 高并发怎么保护推理服务？
+  a: 限并发+排队背压+语义缓存+熔断降级+前缀缓存。
+- id: day10-q10
+  q: 传统运维转 AI Infra 的优势？
+  a: 稳定性/自动化/可观测/高并发治理可迁移，只补推理领域知识。

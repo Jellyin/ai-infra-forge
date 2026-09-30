@@ -1,0 +1,18 @@
+- id: day01-c1
+  front: LLM 推理和传统 Web 服务最本质的三点区别？
+  back: ① 资源：瓶颈从 CPU/内存变成 GPU 显存；② 状态：从无状态变成有状态(KV Cache)；③ 响应：从一次性 JSON 变成流式 SSE。
+- id: day01-c2
+  front: Prefill 和 Decode 分别吃什么资源？
+  back: Prefill(预填充)一次性并行处理输入，吃算力(计算密集)；Decode(生成)逐 token 自回归，吃显存带宽(内存密集)。优化方向完全不同。
+- id: day01-c3
+  front: KV Cache 是什么？为什么它决定并发上限？
+  back: 缓存每个 token 的 K/V 向量避免重复计算。它按序列长度×并发数线性增长，直接占用显存——显存是硬上限，所以并发上限由 KV Cache 占用决定。
+- id: day01-c4
+  front: TTFT 和 TPOT 分别管什么？
+  back: TTFT=首字延迟，管用户体感「快不快」(流式场景关键)；TPOT=每 token 间隔，管整体时长。总耗时≈TTFT+TPOT×生成token数。
+- id: day01-c5
+  front: Continuous Batching 解决什么问题？
+  back: 静态 batching 有「木桶效应」(快的等慢的)，GPU 空转。连续批处理让请求随时加入/退出 batch，GPU 利用率从 ~30% 提到 ~70%。
+- id: day01-c6
+  front: PagedAttention 解决什么问题？
+  back: KV Cache 连续分配产生显存碎片(~50% 利用率)。按固定 block 分页管理(像 OS 分页)，消除碎片，利用率提到 ~90%，并支持前缀缓存。

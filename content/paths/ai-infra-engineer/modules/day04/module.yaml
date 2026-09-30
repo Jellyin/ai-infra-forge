@@ -1,0 +1,17 @@
+id: day04
+title: Kubernetes GPU 调度
+goal: 你会 K8s，但要让 GPU 变成可调度资源
+order: 4
+read: 20
+lab: 40
+concepts:
+  - GPU Operator 链路
+  - device-plugin
+  - Volcano gang scheduling
+  - MIG 资源
+  - 碎片化问题
+checklist:
+  - 能用 GPU Operator 一键装好 GPU 栈
+  - 跑通一个申请 nvidia.com/gpu 的 Pod
+  - 能解释 gang scheduling 解决什么
+  - 能解释 GPU 碎片化问题和解法

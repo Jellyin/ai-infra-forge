@@ -1,0 +1,17 @@
+id: day08
+title: GPU 可观测性
+goal: 双层指标体系 + SLO
+order: 8
+read: 20
+lab: 40
+concepts:
+  - DCGM 硬件指标
+  - vLLM 服务指标
+  - 两层指标下钻
+  - SLO 设计
+  - XID/ECC 硬件故障
+checklist:
+  - 能说出 DCGM 的 6 个关键硬件指标
+  - 能说出两层指标如何关联排障
+  - 会写 5 条关键告警规则
+  - 能设计推理平台的 SLO

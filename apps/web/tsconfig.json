@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"],
+    "paths": {
+      "@/*": ["./src/*"],
+      "virtual:aiforge-content": ["./src/virtual-content.d.ts"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}

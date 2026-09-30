@@ -1,0 +1,17 @@
+id: day06
+title: 量化、并行、长上下文
+goal: 进阶优化三板斧
+order: 6
+read: 25
+lab: 35
+concepts:
+  - FP8/INT4 量化
+  - TP/PP/DP
+  - 长上下文与 KV 压缩
+  - Prefill/Decode 分离
+  - MoE
+checklist:
+  - 能解释 FP8 和 INT4 的权衡和选型
+  - 能说出 TP/PP/DP 的区别和适用
+  - 能聊 Prefill/Decode 分离这个前沿方向
+  - 设计一个 70B 四卡的完整部署方案

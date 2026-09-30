@@ -1,0 +1,2 @@
+- hint: 验证容器能用 GPU
+  cmd: docker run --rm --gpus all nvidia/cuda:12.4.0-base-ubuntu22.04 nvidia-smi

@@ -1,0 +1,23 @@
+{
+  "name": "ai-infra-forge",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI Infra 专精学习路径平台 —— 路线图 + 间隔重复 + 命令实操 + 掌握度反馈的闭环",
+  "type": "module",
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "validate:content": "pnpm --filter @aiforge/content-schema run validate"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "js-yaml": "^4.1.0",
+    "typescript": "^5.5.0"
+  }
+}

@@ -1,0 +1,9 @@
+- id: day08-c1
+  front: GPU 监控的双层指标是哪两层？
+  back: 硬件层(DCGM：利用率/显存/温度/功耗/XID/ECC) + 服务层(vLLM：TTFT/TPOT/排队深度/KV水位/吞吐)。排障要从应用指标下钻到硬件指标。
+- id: day08-c2
+  front: XID 错误是什么？为什么要告警？
+  back: GPU 硬件错误码(如79/48)，代表显存/硬件故障，需要下线节点。这是传统 CPU 运维没有的「GPU 也会坏」的心智。
+- id: day08-c3
+  front: 推理平台的 SLO 怎么设计？
+  back: 方法论和传统 SRE 一样(SLO/SLI/Error Budget)，只是 SLI 换成：可用性99.9%+、TTFT/TPOT P99 分档、GPU利用率>60%、排队深度<10。

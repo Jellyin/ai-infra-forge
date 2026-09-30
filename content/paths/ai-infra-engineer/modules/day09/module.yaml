@@ -1,0 +1,17 @@
+id: day09
+title: 弹性伸缩与 FinOps
+goal: 成本是 MaaS 的核心 KPI
+order: 9
+read: 20
+lab: 35
+concepts:
+  - 冷启动优化
+  - KEDA 按队列伸缩
+  - Karpenter
+  - FinOps 成本手段
+  - 计量计费
+checklist:
+  - 能解释推理扩容为什么慢及优化
+  - 能说出按排队深度伸缩而非按 CPU
+  - 能罗列 6 个成本优化手段
+  - 画一张「利用率→成本→优化」映射表

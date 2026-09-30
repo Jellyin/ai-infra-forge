@@ -1,0 +1,17 @@
+id: day07
+title: 高并发网关与流量治理
+goal: 你的主场，叠加 LLM 特色
+order: 7
+read: 15
+lab: 45
+concepts:
+  - SSE 流式透传
+  - 并发数限流
+  - 长超时
+  - 语义缓存
+  - 按模型路由
+checklist:
+  - 能配 APISIX 网关并验证 SSE 透传
+  - 能解释为什么限并发而不是限 QPS
+  - 能解释语义缓存怎么省 GPU
+  - 搭一个 APISIX→vLLM 最小网关

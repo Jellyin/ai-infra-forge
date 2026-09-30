@@ -1,0 +1,16 @@
+id: day02
+title: 部署 vLLM + 读透指标
+goal: 亲手跑通一个推理服务并看懂它的指标
+order: 2
+read: 15
+lab: 45
+concepts:
+  - OpenAI 兼容接口
+  - SSE 流式输出
+  - 8 个核心指标
+  - 压测找拐点
+checklist:
+  - 能用 vllm serve 起一个 7B 模型
+  - 能用 curl 发非流式和流式请求并看出区别
+  - 能说出 num_requests_waiting 和 gpu_cache_usage_perc 各管什么
+  - 跑压测并记录「并发 vs 吞吐 vs 延迟」曲线表
