@@ -14,10 +14,10 @@ interface FlatCard { key: string; front: string; back: string; moduleTitle: stri
 const DAILY_NEW_LIMIT = 5;
 
 export default function Flashcards({ path, progress }: { path: PathContent; progress: Progress }) {
-  const { cards, gradeCard, todayNewCardCount, recordNewCard } = progress;
+  const { cards, gradeCard, todayNewCardCount, recordNewCard, undoNewCard } = progress;
   const [flipped, setFlipped] = useState(false);
   /** 供撤销上一评（评审 P1-4） */
-  const [lastGraded, setLastGraded] = useState<{ key: string; state: CardState } | null>(null);
+  const [lastGraded, setLastGraded] = useState<{ key: string; state: CardState; wasNew: boolean } | null>(null);
 
   const flat = useMemo<FlatCard[]>(() => {
     const out: FlatCard[] = [];
@@ -43,7 +43,7 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
 
   const grade = (g: Grade) => {
     if (!card) return;
-    const prev = { key: card.key, state: { ...newCardState(), ...state } };
+    const prev = { key: card.key, state: { ...newCardState(), ...state }, wasNew: isNewCard };
     const next = sm2Next(state, g);
     gradeCard(card.key, next);
     if (isNewCard && g !== "again") recordNewCard();   // again 不算引入（明天还是新卡）
@@ -54,6 +54,7 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
   const undo = () => {
     if (!lastGraded) return;
     gradeCard(lastGraded.key, lastGraded.state);
+    if (lastGraded.wasNew) undoNewCard();   // 回补当日额度：撤销引入的新卡不占额度（缺陷2修复）
     setLastGraded(null);
     setFlipped(false);
   };
