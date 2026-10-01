@@ -46,8 +46,9 @@ EOF
 ### 第 1 步：起 APISIX（Docker 一行）
 
 ```bash
-docker run -d --name apisix -p 9080:9080 -p 9180:9180 \
-  -e APISIX_STAND_ALONE=true apache/apisix:3.11.0-debian
+# 注意：不用 STAND_ALONE 模式（standalone 会禁用 Admin API，后续 curl 配置全部失败——
+# 这是本实验曾踩过的坑）。用默认模式 + Admin API 动态配置：
+docker run -d --name apisix -p 9080:9080 -p 9180:9180 apache/apisix:3.11.0-debian
 ```
 
 ### 第 2 步：配路由（重点全在注释里的三个坑）
@@ -59,11 +60,12 @@ curl http://127.0.0.1:9180/apisix/admin/routes/1 -X PUT \
   "uri": "/v1/*",
   "upstream": { "type": "roundrobin", "nodes": { "host.docker.internal:8000": 1 } },
   "timeout": { "connect": 5, "send": 600, "read": 600 },
-  "enable_websocket": false,
   "plugins": {
     "limit-conn": { "conn": 20, "burst": 5, "default_conn_delay": 1, "rejected_code": 429 }
   }
 }'
+# X-API-KEY 是默认 admin key（生产必改）；upstream 用 host.docker.internal
+# 让容器访问宿主机的 vLLM（127.0.0.1 在容器里指容器自己）
 ```
 
 **三个参数的含义（本实验的灵魂）**：

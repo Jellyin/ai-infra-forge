@@ -9,7 +9,7 @@
   back: ① 从坏 checkpoint 恢复（保存中途损坏）② 数据分布变化（新数据源混入）③ 过拟合（对照 held-out 评测集分叉即确诊）。
 - id: day18-c4
   front: DCGM 训练特有读法（vs 推理）？
-  back: SM 利用率满载平线=计算受限（健康）；锯齿=数据/通信受限。训练长期满载更易触发 XID 79/63 显存 ECC；step time 突慢但 MFU 无解时先查温度降频。
+  back: SM 利用率满载平线=计算受限（健康）；锯齿=数据/通信受限。训练长期满载更易触发 XID 48（ECC 不可纠错）/63（row remapping）；step time 突慢但 MFU 无解时先查温度降频。
 - id: day18-c5
   front: 8×H100 训 13B 实测 12000 tok/s 的 MFU？
-  back: 13×6=78 GFLOPs/token；12000×78G/(990T×8)≈18%——不健康。该查：通信退化（transport Socket？）、数据饿（GPU 锯齿？）、PP 气泡占比。
+  back: 13×6=78 GFLOPs/token；12000×78G/(990T×8)=936/7920≈11.8%——不健康。该查：通信退化（transport Socket？）、数据饿（GPU 锯齿？）、PP 气泡占比。

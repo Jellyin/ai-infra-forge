@@ -241,7 +241,7 @@ test.describe("补全 · 闪卡撤销与限额交互", () => {
     await expect(visibleScope(page).locator(".stat-tile").first()).toContainText("6");
   });
 
-  test("18. 评 good 后掌握度三档统计联动（39 卡：学习中 1 / 未开始 38）", async ({ page }) => {
+  test("18. 评 good 后掌握度三档统计联动（112 卡：学习中 1 / 未开始 111）", async ({ page }) => {
     await resetProgress(page);
     await gotoTab(page, "闪卡复习");
     await gradeCard(page, "good");
@@ -250,7 +250,7 @@ test.describe("补全 · 闪卡撤销与限额交互", () => {
     await expect(tiles.nth(0)).toContainText("4");    // 本次剩余（额度 5-1）
     await expect(tiles.nth(1)).toContainText("0");    // 已掌握（good 1 次，reps=1 尚未掌握）
     await expect(tiles.nth(2)).toContainText("1");    // 学习中
-    await expect(tiles.nth(3)).toContainText("38");   // 未开始 39-1
+    await expect(tiles.nth(3)).toContainText("111");  // 未开始 112-1
   });
 });
 
@@ -264,13 +264,13 @@ test.describe("补全 · 面试自测与通关判定联动", () => {
     // 全部 10 题自评掌握
     const knownButtons = scope.locator("button.btn--good", { hasText: "掌握" });
     await knownButtons.first().waitFor({ state: "visible" });
-    expect(await knownButtons.count()).toBe(10);
-    for (let i = 0; i < 10; i++) {
+    expect(await knownButtons.count()).toBe(20);   // day10 10 题 + day29 10 题
+    for (let i = 0; i < 20; i++) {
       await knownButtons.nth(i).click();
     }
 
     // 面试题统计：已掌握 10/10、掌握率 100%
-    await expect(scope.locator(".stat-tile").first()).toContainText("10/10");
+    await expect(scope.locator(".stat-tile").first()).toContainText("20/20");
     await expect(scope.locator(".stat-tile").nth(1)).toContainText("100%");
 
     // 通关判定卡：标题仍是「通关判定」（未通关）

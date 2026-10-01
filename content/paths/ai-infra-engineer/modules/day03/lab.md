@@ -47,7 +47,7 @@ title: 实验三 · 显存预算师的算账课
 <details><summary>对照</summary>
 
 - 权重：13×0.5 = **6.5GB**；4090 有 24GB。
-- KV Cache 池可留 ~15GB。13B 模型（40 层/40 KV头/128 维）FP16 KV 每 token ≈ 2×40×40×128×2 = 1.6MB。
+- KV Cache 池可留 ~15GB。13B 模型（40 层/40 KV头/128 维）FP16 KV 每 token ≈ 2×40×40×128×2 = 0.8MB。
 - 15GB ÷ 1.6MB ≈ **9000 token 总量**——比如 4 并发 × 2K 上下文。
 - 结论：**能部署，但并发/上下文受限**。消费卡跑小模型量化是可行的省钱方案（代价：无 NVLink、无 ECC）。
 </details>
@@ -58,8 +58,8 @@ title: 实验三 · 显存预算师的算账课
 
 <details><summary>对照</summary>
 
-7B 级（32 层 / 32 KV 头 / 128 维）FP16：每 token ≈ 2×32×32×128×2 = **1MB**。
-1M token → **1TB KV Cache**。
+7B 级（32 层 / 32 KV 头 / 128 维）FP16：每 token ≈ 2×32×32×128×2 = **0.5MB**。
+1M token → **0.5TB KV Cache**。
 这就是为什么「1M 上下文」必然依赖：KV 量化（FP8 减半）、MLA 压缩（DeepSeek 路线）、稀疏注意力——**没有任何硬件能裸扛**。
 </details>
 
@@ -70,8 +70,8 @@ title: 实验三 · 显存预算师的算账课
 <details><summary>对照</summary>
 
 - KV 池 ≈ 0.9×24 - 14 = 7.6GB（gpu-mem-util 0.9）。
-- 需求：32 并发 × 4096 token × 1MB/token = **128GB**。
-- 差 17 倍。可行解：① 降并发到 2（7.6GB≈2×4K）② INT4 权重（省 7GB → 池 14.6GB，支持 3 并发）③ 换 80G 卡 ④ 多卡 DP。
+- 需求：32 并发 × 4096 token × 0.5MB/token = **64GB**。
+- 差 8 倍多。可行解：① 降并发到 3（7.6GB≈3×4K）② INT4 权重（省 7GB → 池 14.6GB，支持 3 并发）③ 换 80G 卡 ④ 多卡 DP。
 - **体感结论**：7B 看似小，KV Cache 才是并发预算的真正大头。
 </details>
 

@@ -1,6 +1,6 @@
 - id: day12-c1
   front: Ring-AllReduce 每卡收发量是多少？为什么无主卡瓶颈？
-  back: ≈2×数据总量/N（与卡数无关）。环上 reduce-scatter + all-gather 两阶段，每卡只传自己那一块的流水——对比主卡汇聚的 O(N)，这是 Ring 的根本优势。
+  back: "≈2×(N-1)/N×单卡数据量（N 大时≈2×）。校验直觉：每卡都要拿到完整结果，接收下限=数据量本身。Ring 把主卡汇聚的 O(N×数据) 压到常数级——这是它的价值。"
 - id: day12-c2
   front: AllReduce 和 AllGather 各用于训练的什么场景？
   back: AllReduce=DDP 梯度同步（全员求和）；AllGather=FSDP 的参数分片聚合（用时拼全量）。Broadcast 用于初始化参数同步。

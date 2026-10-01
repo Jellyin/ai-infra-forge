@@ -6,10 +6,10 @@
   back: ZeRO-1 分片优化器状态（省4×）；ZeRO-2 加梯度（8×）；ZeRO-3 加参数（16×~N×，通信大增与 FSDP 同族）。默认开 2 档，不够再上 3。
 - id: day13-c3
   front: TP/PP/DP 的组合规则？
-  back: ① TP 留机内（通信最重必须 NVLink）；② PP 跨机（通信少但有气泡）；③ DP 填余量（最便宜）。优先级：能 DP 不 TP，能 TP 不 PP。
+  back: ① TP 留机内（通信量最大必须 NVLink）；② PP 跨机（通信量小但有气泡）；③ DP/ZeRO 填余量（最便宜）。优先级：能 DP/ZeRO 解决不上 TP（通信最重），TP 装不下再叠 PP。
 - id: day13-c4
   front: 流水线并行的「气泡」是什么？怎么减小？
   back: PP 切 N 段，前段没算完后段空等。气泡率≈(N-1)/(micro-batch数+N-1)——micro-batch 越多气泡占比越小。
 - id: day13-c5
   front: 8 卡训 70B 的并行组合？
-  back: TP=2（NVLink 机内，单卡放不下）× PP=1（单机不需要）× DP=4（数据并行填余量）。TP 通信重故只切到刚好放得下。
+  back: 训练态≈16B/参数×70B=1120GB 超 640GB——TP=2+ZeRO-1 分片+DP=4。纯 TP/DP 组合装不下是 70B 的现实，卡不够先 ZeRO 后 TP。

@@ -11,7 +11,7 @@ concepts:
   - hang 的三类根因
   - NCCL_DEBUG 定位法
 checklist:
-  - 能解释 Ring-AllReduce 每卡收发量为何是 2×模型/N
+  - 能解释 Ring-AllReduce 每卡收发量 2×(N-1)/N×数据量及其物理下限
   - 能说出 NCCL hang 的三大类根因（网络/同步等待/超时配置）
   - 会用 NCCL_DEBUG=INFO 与 py-spy 定位 hang 在哪个集合调用
   - 知道 IB/RoCE/共享内存对跨机/机内通信的影响

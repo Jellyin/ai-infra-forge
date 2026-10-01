@@ -3,7 +3,7 @@
   back: LLM 权重（你熟悉的）+ ViT 视觉编码器权重（~1-2GB 但独立）+ KV Cache（LLM token + 视觉 token 都占）。另有图像预处理的 CPU 开销——多模态服务 CPU 配比要调高。
 - id: day24-c2
   front: 一张 1024×1024 的图等效多少 KV token？
-  back: 视觉 token≈分辨率/patch²，patch=16 时 64×64=4096 个——≈4K 文本的 KV 占用。用户传 4K 原图≈16K 等效 token。入口必须限制图像分辨率，否则几张原图打爆 KV 池。
+  back: 视觉 token≈分辨率/patch²，patch=16 时 64×64=4096 个——≈4K 文本的 KV 占用。用户传 4K 原图 4096²≈65K 等效 token。入口必须限制图像分辨率，否则几张原图打爆 KV 池。
 - id: day24-c3
   front: VLM 的 TTFT 构成与纯 LLM 差在哪？
   back: 多了图像编码（ViT 前向）——图像越大 TTFT 越长且纯算力不可流式。图片问答输出短，decode 占比低，瓶颈前移到 prefill/编码段。

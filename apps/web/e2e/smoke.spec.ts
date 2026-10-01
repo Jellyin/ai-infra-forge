@@ -145,7 +145,9 @@ test.describe("冒烟 · 关键链路", () => {
 
     // node 侧改 path.yaml 标题，触发 watcher → invalidate → full-reload
     const { writeFile, readFile } = await import("node:fs/promises");
-    const pathYaml = "/Users/lv/ai-infra-forge/content/paths/ai-infra-engineer/path.yaml";
+    // 路径由测试文件位置推导（可移植到 CI/其他机器）
+    const { fileURLToPath } = await import("node:url");
+    const pathYaml = fileURLToPath(new URL("../../../content/paths/ai-infra-engineer/path.yaml", import.meta.url));
     const original = await readFile(pathYaml, "utf8");
     await writeFile(pathYaml, original.replace(
       "title: AI Infra / MaaS 平台工程师 · 30 天掌握计划",

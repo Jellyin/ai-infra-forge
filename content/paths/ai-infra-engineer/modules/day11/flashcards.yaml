@@ -1,6 +1,6 @@
 - id: day11-c1
   front: DP 为什么被 DDP 淘汰？
-  back: 两个致命伤：① 单进程多线程撞 Python GIL，无法并行；② 梯度全汇聚到主卡再广播——主卡通信和显存是 N 倍热点。DDD 每卡独立进程 + Ring-AllReduce 消除主卡瓶颈。
+  back: 两个致命伤：① 单进程多线程撞 Python GIL，无法并行；② 梯度全汇聚到主卡再广播——主卡通信和显存是 N 倍热点。DDP 每卡独立进程 + Ring-AllReduce 消除主卡瓶颈。
 - id: day11-c2
   front: DDP 的梯度同步发生在哪一步？
   back: backward 过程中「分桶」异步同步——每算完一桶梯度立即发起该桶的 AllReduce，通信与剩余反向计算重叠。不是等 backward 全结束才同步。
