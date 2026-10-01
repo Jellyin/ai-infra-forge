@@ -1,0 +1,15 @@
+- id: day24-c1
+  front: VLM 显存的三大块？
+  back: LLM 权重（你熟悉的）+ ViT 视觉编码器权重（~1-2GB 但独立）+ KV Cache（LLM token + 视觉 token 都占）。另有图像预处理的 CPU 开销——多模态服务 CPU 配比要调高。
+- id: day24-c2
+  front: 一张 1024×1024 的图等效多少 KV token？
+  back: 视觉 token≈分辨率/patch²，patch=16 时 64×64=4096 个——≈4K 文本的 KV 占用。用户传 4K 原图≈16K 等效 token。入口必须限制图像分辨率，否则几张原图打爆 KV 池。
+- id: day24-c3
+  front: VLM 的 TTFT 构成与纯 LLM 差在哪？
+  back: 多了图像编码（ViT 前向）——图像越大 TTFT 越长且纯算力不可流式。图片问答输出短，decode 占比低，瓶颈前移到 prefill/编码段。
+- id: day24-c4
+  front: VLM 容量题：8K 上下文+单图4K视觉token，KV 池 20GB，每 token 0.5MB？
+  back: 单请求 (8K+4K)×0.5MB=6GB → 只能撑约 3 并发。多模态容量比直觉小得多——图像按等效 token 计价是容量规划的核心换算。
+- id: day24-c5
+  front: 多模态网关比 LLM 网关多出的红线？
+  back: 图像闸门——分辨率/单请求张数硬限（原图=16K 等效 token 炸 KV 池）。max-model-len 要预留视觉 token 余量；CPU 配比调高做预处理。

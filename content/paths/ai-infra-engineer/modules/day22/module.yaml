@@ -1,0 +1,16 @@
+id: day22
+title: 集群网络规划
+goal: RDMA 网络的容量/拓扑/无损配置——训练集群的血管系统
+order: 22
+read: 20
+lab: 30
+concepts:
+  - Spine-Leaf 与轨式拓扑
+  - IB vs RoCE 的取舍
+  - 无损网络三件套（PFC/ECN/DCQCN）
+  - 网络容量预算方法
+checklist:
+  - 能算训练集群的南北向/东西向带宽预算
+  - 能说出 IB 与 RoCE 的三条取舍
+  - 理解无损三件套各自解决什么问题
+  - 知道「轨道优化」（rail-optimized）拓扑的含义

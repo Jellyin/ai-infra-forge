@@ -1,0 +1,16 @@
+id: day21
+title: 规模化调度问题深化
+goal: 拓扑感知/亲和性/碎片化——千卡集群的调度器视角
+order: 21
+read: 20
+lab: 35
+concepts:
+  - GPU 拓扑感知调度
+  - NUMA 与 PCIe 层级
+  - 碎片化的量化度量
+  - 调度器打分扩展
+checklist:
+  - 能解释拓扑感知为什么直接决定 NCCL 性能
+  - 能算碎片率（1-最大可分配整机/总卡数）
+  - 知道 binpacking vs spreading 在训练场景的取舍反转
+  - 会用 kubectl describe 看 GPU 分配结果验证拓扑

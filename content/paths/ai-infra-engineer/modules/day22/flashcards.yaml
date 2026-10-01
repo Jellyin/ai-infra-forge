@@ -1,0 +1,15 @@
+- id: day22-c1
+  front: 训练集群东西向带宽怎么预算？
+  back: 法则：每 GPU 配 25-50% 峰值算力所需带宽（A100 世代 200Gbps/GPU 等值，H100 世代 400G）。节点注入带宽×节点数=交换机层预算；南北向（数据/checkpoint）与东西向分网承载。
+- id: day22-c2
+  front: IB 与 RoCE 的三条取舍？
+  back: ① IB 封闭但天生无损省心，RoCE 需三件套调优 ② IB 延迟略优 ③ RoCE 复用以太网生态、设备竞争充分便宜、可超大。万卡以下 IB 主流，超大规模/成本敏感选 RoCE。
+- id: day22-c3
+  front: 无损三件套各解决什么？
+  back: PFC（拥塞时暂停上游防丢包，但有头部阻塞捎死邻居风险）；ECN（交换机打拥塞预警标记）；DCQCN（端点收到 ECN 降速再恢复）。RDMA 假设不丢包——丢一次重传代价极高。
+- id: day22-c4
+  front: 轨道优化（rail-optimized）拓扑是什么？
+  back: 每节点 GPU0-7 各接不同 Leaf——GPU0 全集群走 Leaf-0……NCCL Ring 按卡号成环，同轨道流量只压同一组 Leaf 互不干扰。拓扑为通信模式定制的典范。
+- id: day22-c5
+  front: 训练节点为什么常有 3-4 张网？
+  back: 训练网（东西向 NCCL）、存储网（数据集/checkpoint 南北向）、业务网/管理网——分离防互扰（一训练全网抖的教训），每张网容量与 QoS 目标独立。

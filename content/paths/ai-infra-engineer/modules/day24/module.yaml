@@ -1,0 +1,16 @@
+id: day24
+title: 多模态推理运维
+goal: VLM 的显存特征与部署差异——视觉编码器是另一头显存大户
+order: 24
+read: 20
+lab: 30
+concepts:
+  - VLM 双塔结构（ViT+LLM）
+  - 视觉 token 的 KV Cache 膨胀
+  - 图像批处理的吞吐特征
+  - 部署参数差异
+checklist:
+  - 能说出 VLM 显存三大块（LLM 权重/ViT 权重/视觉 KV）
+  - 能估算一张图消耗多少 KV Cache（与分辨率/patch 数的关系）
+  - 知道图像请求的 TTFT 构成（编码+prefill）
+  - 会对比 VLM 与纯 LLM 的容量规划差异
