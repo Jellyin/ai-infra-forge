@@ -35,6 +35,18 @@ jobs:
       - name: Build（生产构建）
         run: pnpm --filter web run build
 
+      - name: Playwright 冒烟（E2E）
+        working-directory: apps/web
+        run: pnpm exec playwright install chromium --with-deps && pnpm exec playwright test
+
+      - name: 上传测试失败报告（仅失败时）
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7
+
       - name: 上传构建产物（便于检查）
         uses: actions/upload-artifact@v4
         with:
