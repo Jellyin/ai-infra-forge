@@ -1,0 +1,16 @@
+id: day13
+title: Megatron/DeepSpeed 实操
+goal: 跑通一次多卡微调，理解并行参数的选择逻辑
+order: 13
+read: 25
+lab: 40
+concepts:
+  - 三维并行组合（DP/TP/PP）
+  - Megatron-LM 与 DeepSpeed 的定位差异
+  - ZeRO 三级分片
+  - 并行参数怎么选
+checklist:
+  - 能说出 Megatron 与 DeepSpeed 的定位差异
+  - 能解释 ZeRO-1/2/3 各分片什么
+  - 给定卡数能推一套 TP/PP/DP 组合（如 8 卡 = TP2×PP1×DP4）
+  - 理解「并行度不是越大越好」——TP 通信重留机内，PP 引起气泡

@@ -1,0 +1,18 @@
+id: day11
+title: PyTorch 分布式训练演进
+goal: 把「跑模型」从单卡思维升级为多卡协作思维——DP/DDP/FSDP 的演进逻辑
+order: 11
+read: 25
+lab: 35
+concepts:
+  - 单卡到多卡的动机
+  - DP 的复制-汇聚瓶颈
+  - DDP 的梯度分桶 AllReduce
+  - FSDP 的参数分片
+  - launcher 与进程组
+checklist:
+  - 能说出 DP 被 DDP 淘汰的原因（GIL + 主卡汇聚瓶颈）
+  - 能解释 DDP 梯度同步发生在哪一步（backward 中分桶）
+  - 能对比 FSDP 与 DDP 的显存差异（参数全量 vs 分片）
+  - 知道 torchrun 与进程组 world_size/rank 的关系
+  - 能解释「一卡 hang 全体卡死」的原因（集合通信的同步语义）

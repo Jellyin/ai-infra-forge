@@ -1,0 +1,18 @@
+- id: day12-c1
+  front: Ring-AllReduce 每卡收发量是多少？为什么无主卡瓶颈？
+  back: ≈2×数据总量/N（与卡数无关）。环上 reduce-scatter + all-gather 两阶段，每卡只传自己那一块的流水——对比主卡汇聚的 O(N)，这是 Ring 的根本优势。
+- id: day12-c2
+  front: AllReduce 和 AllGather 各用于训练的什么场景？
+  back: AllReduce=DDP 梯度同步（全员求和）；AllGather=FSDP 的参数分片聚合（用时拼全量）。Broadcast 用于初始化参数同步。
+- id: day12-c3
+  front: NCCL hang 的三大类根因？
+  back: ① 同步等待（某 rank 真死如 OOM，其余卡在集合调用排队——凶手有 traceback，等死者日志停在同一通信点）；② 网络层故障（IB/RoCE 链路抖动、MTU 不一致）；③ 超时配置缺失（无限等待表现为任务永远 Running）。
+- id: day12-c4
+  front: NCCL hang 定位三件套？
+  back: ① NCCL_DEBUG=INFO 看卡在哪个集合调用哪两个 rank 间；② py-spy dump 看各进程栈（停在 ncclAllReduce 等待即确诊）；③ ibstat / nvidia-smi nvlink -s 网络体检。
+- id: day12-c5
+  front: "「训练能跑但慢10倍」的隐形故障是什么信号？"
+  back: "NCCL 走了 TCP 兜底而非 IB/P2P——NCCL_DEBUG=INFO 里出现 using transport: Socket。任务不报错但通信慢百倍。生产跨机训练不应走 TCP。"
+- id: day12-c6
+  front: 机内 NVLink 与跨机 IB 的带宽数量级？
+  back: NVLink 300-900 GB/s（卡↔卡）；InfiniBand/RoCE 25-400 Gbps（机↔机）；TCP 以太网 1-10 Gbps 仅调试兜底。生产跨机梯度同步必须 RDMA。

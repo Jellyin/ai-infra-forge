@@ -1,0 +1,16 @@
+id: day14
+title: 训练数据管道与存储
+goal: 数据集的吞吐设计——存储是训练的第一瓶颈
+order: 14
+read: 20
+lab: 35
+concepts:
+  - 数据加载的三级流水
+  - 随机打散与分布式采样
+  - 对象存储 vs 高性能文件系统
+  - 数据预取与缓存
+checklist:
+  - 能指出训练慢的第一嫌疑是数据饿 GPU（GPU 利用率锯齿）
+  - 能解释为什么多节点训练要 DistributedSampler
+  - 知道 S3 拉数据 vs JuiceFS/mount 的延迟差量级
+  - 会用 DCGM 锯齿形态判断 IO 瓶颈

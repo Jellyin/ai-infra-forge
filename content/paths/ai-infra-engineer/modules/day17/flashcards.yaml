@@ -1,0 +1,15 @@
+- id: day17-c1
+  front: 全参/LoRA/QLoRA 的显存量级（7B）与选择？
+  back: 全参~80GB（效果天花板）；LoRA~20GB（可训<1%，默认选择）；QLoRA~8GB（4bit底座+LoRA，消费卡可跑）。QLoRA 训练时量化，推理可合并回 FP16 或保持 4bit。
+- id: day17-c2
+  front: SFT 全链路五步？
+  back: ①数据（清洗去重+chat template）②训练（LoRA+有效batch+lr）③评测（held-out+业务指标）④合并导出 ⑤灰度发布衔接推理侧。红线：没有评测集的微调是盲调，不给发布。
+- id: day17-c3
+  front: "「训完答非所问」的第一大翻车原因？"
+  back: 训练格式≠推理格式——chat template 没对齐。训练时 prompt 的包装方式与线上推理的拼法不一致，模型学到的模式全部失效。
+- id: day17-c4
+  front: adapter 与底座分离管理的好处？
+  back: 底座共享（14GB 一次存储）、adapter 按版本管理（20MB 级）；服务侧热加载实现一个 vLLM 副本多任务 LoRA 按路由切换——多租户利器。发布灰度与 Web 服务同构。
+- id: day17-c5
+  front: LoRA 微调 loss 不降的两大原因？
+  back: ① lr 不对（LoRA 要 1e-4 量级，全参的 2e-5 会让它几乎不动）；② 数据格式错（没套 chat template）。

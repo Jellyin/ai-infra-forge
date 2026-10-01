@@ -1,0 +1,17 @@
+id: day12
+title: NCCL 集合通信与排障
+goal: 训练侧一票否决项——看懂 Ring-AllReduce、能定位 NCCL hang 与网络故障
+order: 12
+read: 25
+lab: 40
+concepts:
+  - AllReduce/Broadcast/AllGather
+  - Ring-AllReduce 带宽模型
+  - NCCL 通信树与拓扑
+  - hang 的三类根因
+  - NCCL_DEBUG 定位法
+checklist:
+  - 能解释 Ring-AllReduce 每卡收发量为何是 2×模型/N
+  - 能说出 NCCL hang 的三大类根因（网络/同步等待/超时配置）
+  - 会用 NCCL_DEBUG=INFO 与 py-spy 定位 hang 在哪个集合调用
+  - 知道 IB/RoCE/共享内存对跨机/机内通信的影响

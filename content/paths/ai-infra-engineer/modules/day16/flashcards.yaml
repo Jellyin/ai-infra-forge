@@ -1,0 +1,15 @@
+- id: day16-c1
+  front: 训练任务与推理服务的调度本质差异？
+  back: 训练=跑完即退的 Job 且副本强耦合（集合通信互相等待）；推理=常驻 Deployment 副本无耦合。训练扩容非 HPA——world_size 基本不可变（弹性需框架配合），失败恢复走 checkpoint 续训。
+- id: day16-c2
+  front: gang scheduling 对训练为什么是硬需求？
+  back: 8 卡任务先起 7 个 Pod，第 8 个排队——7 个卡在 NCCL init 握手白占 GPU 死等。不是浪费，是「占着卡不干活」。Volcano PodGroup minMember 保证凑齐才一起启动。
+- id: day16-c3
+  front: 训练平台参考架构五层？
+  back: ①网关（API+配额）②队列调度（Volcano gang/优先级/公平）③作业执行（torchrun容器+hostfile+RDMA）④支撑（数据缓存/Checkpoint池/镜像P2P）⑤可观测（MFU/loss/XID+事件流）。
+- id: day16-c4
+  front: 弹性训练为什么难？
+  back: world_size 运行中变化要求：NCCL 通信组重塑、sampler 重切、TP/PP 分组重算（几乎不可行，纯 DP 才可弹性）。主流平台做「摘故障节点→重启续训」而非真弹性。
+- id: day16-c5
+  front: Volcano 给训练补了哪些 K8s 原生没有的？
+  back: PodGroup/minMember（gang）、Queue 配额与优先级抢占、svcplugin 注入 hostfile（分布式训练 Pod 间互知 MASTER_ADDR）。

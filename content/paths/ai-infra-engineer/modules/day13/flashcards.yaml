@@ -1,0 +1,15 @@
+- id: day13-c1
+  front: Megatron-LM 和 DeepSpeed 的定位差异？
+  back: Megatron（NVIDIA）强在 3D 并行原生融合、预训练 MFU 极致，配置复杂；DeepSpeed（微软）强在 ZeRO 显存分片与易用性，适合微调与工程落地。
+- id: day13-c2
+  front: ZeRO-1/2/3 各分片什么？显存节省多少？
+  back: ZeRO-1 分片优化器状态（省4×）；ZeRO-2 加梯度（8×）；ZeRO-3 加参数（16×~N×，通信大增与 FSDP 同族）。默认开 2 档，不够再上 3。
+- id: day13-c3
+  front: TP/PP/DP 的组合规则？
+  back: ① TP 留机内（通信最重必须 NVLink）；② PP 跨机（通信少但有气泡）；③ DP 填余量（最便宜）。优先级：能 DP 不 TP，能 TP 不 PP。
+- id: day13-c4
+  front: 流水线并行的「气泡」是什么？怎么减小？
+  back: PP 切 N 段，前段没算完后段空等。气泡率≈(N-1)/(micro-batch数+N-1)——micro-batch 越多气泡占比越小。
+- id: day13-c5
+  front: 8 卡训 70B 的并行组合？
+  back: TP=2（NVLink 机内，单卡放不下）× PP=1（单机不需要）× DP=4（数据并行填余量）。TP 通信重故只切到刚好放得下。

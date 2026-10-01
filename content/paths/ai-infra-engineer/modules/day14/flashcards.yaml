@@ -1,0 +1,12 @@
+- id: day14-c1
+  front: 训练 GPU 利用率呈锯齿（30%↔95%）说明什么？诊断顺序？
+  back: 数据管道喂不上 GPU。顺序：DCGM 看锯齿周期 → iostat 看 IO wait/吞吐是否到顶 → DataLoader num_workers 是否不够 → 存储方案是否需要本地缓存/并行文件系统。
+- id: day14-c2
+  front: "为什么 DataLoader shuffle=True 与 DistributedSampler 互斥？"
+  back: 打散职责上移到 sampler——各 rank 的打散结果必须互补不重叠。DataLoader 再打散会破坏 rank 间切分，直接报错。seed 必须固定（各 rank seed 不同=采样灾难）。
+- id: day14-c3
+  front: 训练存储方案的延迟/吞吐量级？
+  back: S3 直读秒级冷启；JuiceFS/Lustre 挂载毫秒级多 GB/s 聚合（多节点并发读主力）；本地 NVMe 3-7GB/s（热数据）。多节点读同一数据集聚合带宽要×N 预算——S3 只配冷备。
+- id: day14-c4
+  front: jsonl/parquet/预tokenize 的取舍？
+  back: jsonl 通用可读但慢；parquet 列存压缩吞吐 5-10×（大训练集事实标准）；预 tokenize（.bin）训练时零 CPU——追求 MFU 极限的预训练标配。

@@ -1,0 +1,16 @@
+id: day16
+title: 训练任务调度
+goal: K8s 上调度训练任务——Job/Volcano/多租户队列
+order: 16
+read: 25
+lab: 35
+concepts:
+  - 训练任务 vs 服务的调度差异
+  - gang scheduling（回炉）
+  - 队列配额与优先级抢占
+  - 训练平台参考架构
+checklist:
+  - 能说出训练 Job 与推理 Deployment 的调度本质差异
+  - 能画训练平台参考架构（队列/调度/存储/监控四层）
+  - 理解 gang scheduling 在训练场景是硬需求（Partial 启动 = 全体白等）
+  - 知道弹性训练（elastic）为什么难——world_size 变化要求框架配合

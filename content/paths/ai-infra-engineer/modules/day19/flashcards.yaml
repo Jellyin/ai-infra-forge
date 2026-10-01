@@ -1,0 +1,15 @@
+- id: day19-c1
+  front: 多租户的 guarantees vs limits 配额设计？
+  back: 保底份额（随时可用）+ 突发份额（闲时借用可被收回）。训练任务的抢占必须优雅：收信号→存 checkpoint→退出，不能直接杀（否则丢失训练进度引发信任危机）。
+- id: day19-c2
+  front: 占用 GPU·时 vs 有效 GPU·时的差额度量什么？
+  back: 平台碎片化/等待成本——gang 等待期占卡不干活。这是 FinOps 核心报表：差额大=调度效率低（碎片/排队），是平台优化优先级的直接依据。
+- id: day19-c3
+  front: 训练账单的三要素？checkpoint 为什么是隐形大户？
+  back: GPU·时+存储（数据集/checkpoint 池）+网络流量（跨区拉数据）。checkpoint 700GB/份×N 份×多项目，无生命周期策略（保留3份+90天过期）会失控。
+- id: day19-c4
+  front: 多租户算力平台的三个北极星报表？
+  back: ① 集群 MFU 均值（供给效率）② 排队时长 P50/P90（需求满足度/用户痛点）③ GPU·时成本/团队（分摊透明度）。showback 先行 chargeback 后上。
+- id: day19-c5
+  front: 训练集群 RDMA 网与业务网为什么要隔离？
+  back: NCCL 集合通信大流量（每步 GB 级）会打爆共享业务网——经典事故形态是「一开训练全网业务抖动」。隔离是网络层第一红线。

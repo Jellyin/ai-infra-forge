@@ -1,0 +1,15 @@
+- id: day18-c1
+  front: MFU 的定义与计算？健康量级？
+  back: 实际吞吐/理论算力上限。例：7B×6 FLOPs/参数/token=42G/token。单机 40-60% 健康；千卡 30% 正常（通信占比变大）；<30% 该查通信/数据/气泡。
+- id: day18-c2
+  front: loss 曲线锯齿尖峰怎么排障？
+  back: loss spike：定位 spike step→dump 该 batch 样本→通常是脏数据（乱码/超长/重复），或 lr 太大/梯度异常。平台防线：数据清洗校验+spike 自动回滚前 checkpoint 重跑。
+- id: day18-c3
+  front: "loss 降后突然抬升到新平台，三大可能？"
+  back: ① 从坏 checkpoint 恢复（保存中途损坏）② 数据分布变化（新数据源混入）③ 过拟合（对照 held-out 评测集分叉即确诊）。
+- id: day18-c4
+  front: DCGM 训练特有读法（vs 推理）？
+  back: SM 利用率满载平线=计算受限（健康）；锯齿=数据/通信受限。训练长期满载更易触发 XID 79/63 显存 ECC；step time 突慢但 MFU 无解时先查温度降频。
+- id: day18-c5
+  front: 8×H100 训 13B 实测 12000 tok/s 的 MFU？
+  back: 13×6=78 GFLOPs/token；12000×78G/(990T×8)≈18%——不健康。该查：通信退化（transport Socket？）、数据饿（GPU 锯齿？）、PP 气泡占比。

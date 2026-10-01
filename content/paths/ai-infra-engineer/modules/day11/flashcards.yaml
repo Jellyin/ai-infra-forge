@@ -1,0 +1,15 @@
+- id: day11-c1
+  front: DP 为什么被 DDP 淘汰？
+  back: 两个致命伤：① 单进程多线程撞 Python GIL，无法并行；② 梯度全汇聚到主卡再广播——主卡通信和显存是 N 倍热点。DDD 每卡独立进程 + Ring-AllReduce 消除主卡瓶颈。
+- id: day11-c2
+  front: DDP 的梯度同步发生在哪一步？
+  back: backward 过程中「分桶」异步同步——每算完一桶梯度立即发起该桶的 AllReduce，通信与剩余反向计算重叠。不是等 backward 全结束才同步。
+- id: day11-c3
+  front: DDP 和 FSDP 的显存差异？
+  back: DDP 每卡存全量参数+全量优化器状态（70B Adam≈840GB/卡）；FSDP 全部切片，每卡 O(全模型/N)。FSDP 用每层 gather/scatter 的额外通信换显存可行性。
+- id: day11-c4
+  front: 「一卡 hang 全体卡死」的原因？
+  back: 集合通信（AllReduce 等）是同步原语——所有 rank 必须到齐才能继续。一张卡卡在通信调用里，其他卡全部在等待点排队。推理服务无此耦合：单卡挂只是容量下降。
+- id: day11-c5
+  front: torchrun 的 world_size 和 rank 运维上盯什么？
+  back: ① world_size 必须与申请 GPU 数一致（不一致直接挂）；② rank 0 是主进程——checkpoint/日志/tensorboard 只在 rank 0 做避免 N 份重复；③ 排障时先看哪个 rank 没到同步点。

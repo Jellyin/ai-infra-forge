@@ -1,0 +1,8 @@
+id: day20
+title: 阶段检查点·训练侧实战
+goal: 端到端 mini 流水线：数据→微调→评测→部署
+order: 20
+read: 15
+lab: 60
+concepts: []
+checklist: []
