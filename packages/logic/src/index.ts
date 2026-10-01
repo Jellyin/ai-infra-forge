@@ -187,21 +187,29 @@ export interface CompletionResult {
 }
 
 /** 通关门槛：四路全部 ≥ 阈值（任一不达标即未通关）。
- *  刻意苛刻：这是「可证明的掌握」，不是参与奖。 */
+ *  刻意苛刻：这是「可证明的掌握」，不是参与奖。
+ *  内容缺失的维度（total=0，如路径无命令数据）视为不构成门槛——
+ *  否则该维度永久 ✗，多路径内容永远无法通关。 */
 export function evaluateCompletion(input: CompletionInput): CompletionResult {
-  const r = (a: number, b: number) => (b ? a / b : 0);
-  const quiz = r(input.quizKnown, input.quizTotal);
-  const cards = r(input.cardsGood, input.cardsTotal);
-  const commands = r(input.commandsDone, input.commandsTotal);
-  const checklist = r(input.checklistDone, input.checklistTotal);
+  // 三套语义：门（ok）在「有数据的维度」按阈值判定、缺失维度不挡；分数缺失计 0。
+  // 全维度缺失（用户什么都没学）→ 不通关（必须有学习证据才可能毕业）。
+  const part = (
+    key: CompletionPart["key"], a: number, b: number, threshold: number, label: string,
+  ): CompletionPart => ({
+    key, ratio: b > 0 ? a / b : 0, ok: b === 0 ? true : a / b >= threshold, label,
+  });
   const parts: CompletionPart[] = [
-    { key: "quiz", ratio: quiz, ok: quiz >= 0.8, label: "面试掌握 ≥ 80%" },
-    { key: "cards", ratio: cards, ok: cards >= 0.6, label: "闪卡掌握 ≥ 60%" },
-    { key: "commands", ratio: commands, ok: commands >= 0.6, label: "命令完成 ≥ 60%" },
-    { key: "checklist", ratio: checklist, ok: checklist >= 0.8, label: "清单勾选 ≥ 80%" },
+    part("quiz", input.quizKnown, input.quizTotal, 0.8, "面试掌握 ≥ 80%"),
+    part("cards", input.cardsGood, input.cardsTotal, 0.6, "闪卡掌握 ≥ 60%"),
+    part("commands", input.commandsDone, input.commandsTotal, 0.6, "命令完成 ≥ 60%"),
+    part("checklist", input.checklistDone, input.checklistTotal, 0.8, "清单勾选 ≥ 80%"),
   ];
-  const score = Math.round((quiz * 0.3 + cards * 0.35 + commands * 0.2 + checklist * 0.15) * 100);
-  return { passed: parts.every((p) => p.ok), score, parts };
+  const hasAnyData = input.quizTotal > 0 || input.cardsTotal > 0
+    || input.commandsTotal > 0 || input.checklistTotal > 0;
+  const total = Math.round(
+    (parts[0]!.ratio * 0.3 + parts[1]!.ratio * 0.35 + parts[2]!.ratio * 0.2 + parts[3]!.ratio * 0.15) * 100,
+  );
+  return { passed: hasAnyData && parts.every((p) => p.ok), score: total, parts };
 }
 
 const Logic = {

@@ -143,8 +143,16 @@ test("evaluateCompletion: 四路全达标才通关，任一短板即不通过", 
   assert.equal(quizPart.ok, false);
   assert.equal(cardsPart.ok, true);
 
-  // 空数据不崩
+  // 空数据不崩；全维度缺失 = 没有学习证据 → 不通关（防白板毕业）
   const empty = evaluateCompletion({ quizKnown: 0, quizTotal: 0, cardsGood: 0, cardsTotal: 0, commandsDone: 0, commandsTotal: 0, checklistDone: 0, checklistTotal: 0 });
   assert.equal(empty.passed, false);
   assert.equal(empty.score, 0);
+
+  // 有 quiz 但无 commands 的路径：commands 不应挡通关
+  const noCmd = evaluateCompletion({
+    quizKnown: 9, quizTotal: 10, cardsGood: 30, cardsTotal: 39,
+    commandsDone: 0, commandsTotal: 0,
+    checklistDone: 38, checklistTotal: 41,
+  });
+  assert.equal(noCmd.parts.find((p) => p.key === "commands")!.ok, true);
 });

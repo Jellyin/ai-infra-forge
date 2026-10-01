@@ -9,6 +9,8 @@ type Progress = ReturnType<typeof useProgress>;
 export default function Quiz({ path, progress }: { path: PathContent; progress: Progress }) {
   const { quiz, cards, commands, checklist, gradeQuiz } = progress;
   const [copied, setCopied] = useState(false);
+  /** 剪贴板不可用时的降级：展示可手动复制 的只读文本块 */
+  const [fallbackText, setFallbackText] = useState<string | null>(null);
 
   const flat = useMemo(() => {
     const out: Array<{ key: string; q: string; a: string; moduleTitle: string }> = [];
@@ -60,11 +62,19 @@ export default function Quiz({ path, progress }: { path: PathContent; progress: 
 日期：${new Date().toLocaleDateString("zh-CN")}`;
 
   const copyProof = async () => {
+    // 非安全上下文（如 http://192.168.x.x:8080 的 Docker 部署）无 clipboard API——
+    // 降级为展示可手动复制的只读文本块，绝不静默失败
+    if (!navigator.clipboard?.writeText) {
+      setFallbackText(proofText);
+      return;
+    }
     try {
       await navigator.clipboard.writeText(proofText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch { /* 剪贴板不可用 */ }
+    } catch {
+      setFallbackText(proofText);
+    }
   };
 
   return (
@@ -91,6 +101,18 @@ export default function Quiz({ path, progress }: { path: PathContent; progress: 
             <button className="btn btn--primary" onClick={copyProof}>
               {copied ? "✓ 已复制" : "📋 复制通关证明文本"}
             </button>
+            {fallbackText && (
+              <div style={{ marginTop: "var(--space-3)" }}>
+                <p className="card__subtitle" style={{ margin: "0 0 var(--space-1)" }}>
+                  浏览器限制无法自动复制（非 HTTPS 环境）。请选中下方文本手动复制：
+                </p>
+                <textarea className="cmd-input" readOnly value={fallbackText} rows={8}
+                  onFocus={(e) => e.target.select()} aria-label="通关证明文本，选中后可手动复制" />
+                <button className="btn" onClick={() => setFallbackText(null)} style={{ marginTop: "var(--space-2)" }}>
+                  收起
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

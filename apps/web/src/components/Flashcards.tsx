@@ -9,7 +9,8 @@ type Progress = ReturnType<typeof useProgress>;
 
 interface FlatCard { key: string; front: string; back: string; moduleTitle: string }
 
-/** 每日新卡上限（Anki 式日节奏：防首日洪水，评审 P0-2） */
+/** 每日新卡上限（Anki 式日节奏：防首日洪水，评审 P0-2）。真·按天限额由
+ *  useProgress 的 newCardsByDay 持久化计数实现，此处常量只定义上限值。 */
 const DAILY_NEW_LIMIT = 5;
 
 export default function Flashcards({ path, progress }: { path: PathContent; progress: Progress }) {

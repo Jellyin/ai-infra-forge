@@ -22,11 +22,12 @@ export default function DataPanel({ progress, onClose }: { progress: Progress; o
     setStatus({ ok: true, message: "已下载导出文件，请妥善保存" });
   };
 
-  const onFile = async (f: File | undefined) => {
+  const onFile = async (f: File | undefined, input?: HTMLInputElement) => {
     if (!f) return;
     const text = await f.text();
     setPendingFile({ name: f.name, json: text });
     setStatus(null);
+    input?.focus();
   };
 
   const confirmImport = () => {
@@ -50,7 +51,11 @@ export default function DataPanel({ progress, onClose }: { progress: Progress; o
           <button className="btn btn--primary" onClick={download}>⬇ 导出进度</button>
           <button className="btn" onClick={() => fileRef.current?.click()}>⬆ 选择导入文件</button>
           <input ref={fileRef} type="file" accept="application/json,.json" hidden
-            onChange={(e) => onFile(e.target.files?.[0])} />
+            onChange={(e) => {
+              const input = e.target;
+              onFile(input.files?.[0], input);
+              input.value = "";   // 允许重选同一文件（否则 onChange 不再触发）
+            }} />
           <button className="btn" onClick={onClose}>关闭</button>
         </div>
 

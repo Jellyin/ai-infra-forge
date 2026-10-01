@@ -19,8 +19,6 @@ const TABS: Array<{ id: Tab; label: string; hash: string }> = [
   { id: "quiz", label: "面试自测", hash: "quiz" },
 ];
 
-const TAB_IDS = new Set(TABS.map((t) => t.id));
-
 /** 从 location.hash 恢复 tab（评审 P1-2：刷新/返回不丢位置） */
 function tabFromHash(): Tab {
   const h = location.hash.replace(/^#\/?/, "");
