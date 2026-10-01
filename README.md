@@ -26,8 +26,8 @@ AI Infra Forge 把一条学习路径拆成四种训练方式，形成**可量化
 
 ## 第一条路径
 
-**AI Infra / MaaS 平台工程师 · 10 天**（`content/paths/ai-infra-engineer/`）
-面向 5 年+ 传统运维/DevOps：推理原理、GPU 调度、高并发治理、可观测性、FinOps、平台化。
+**AI Infra / MaaS 平台工程师 · 30 天掌握计划**（`content/paths/ai-infra-engineer/`）
+面向 5 年+ 传统运维/DevOps。三阶段：10 天推理侧内容冲刺（读完即面试就绪）→ 20 天巩固深化（训练侧 + 生产化纵深，建设中）。间隔重复需要 ~30 天完成记忆巩固——10 天学完，30 天掌握。
 
 ## 快速开始
 
