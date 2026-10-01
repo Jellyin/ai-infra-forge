@@ -10,7 +10,7 @@ type CardMastery = "good" | "learning" | "new";
 interface Props { path: PathContent; progress: Progress; onGoTab?: (tab: string) => void; onOpenModule?: (id: string) => void }
 
 export default function Dashboard({ path, progress, onGoTab, onOpenModule }: Props) {
-  const { checklist, cards, commands, quiz, activity } = progress;
+  const { checklist, cards, commands, quiz, activity, todayNewCardCount } = progress;
 
   /* 全路径聚合：清单 / 闪卡 / 命令 / 面试 四路进度（key 走统一 keys.ts） */
   const stats = useMemo(() => {
@@ -44,10 +44,14 @@ export default function Dashboard({ path, progress, onGoTab, onOpenModule }: Pro
       check: [doneChecks, totalChecks], cmd: [doneCmds, totalCmds],
       quiz: [knownQuiz, totalQuiz], mastery, totalCards,
       streak: computeStreak(activity),
-      dueToday: buildCardQueue(cardStates).order.length,   // due + 限额内新卡 = 今日可学
+      // 与 Flashcards 页同口径：剩余额度 = 上限 - 今日已引入（否则评 5 张后
+      // 闪卡页显示 0 而仪表盘仍显示 5，点击进去是空队列）
+      dueToday: buildCardQueue(cardStates, undefined, {
+        dailyNewLimit: Math.max(0, 5 - todayNewCardCount),
+      }).order.length,
       totalChecks,
     };
-  }, [path, checklist, cards, commands, quiz, activity]);
+  }, [path, checklist, cards, commands, quiz, activity, todayNewCardCount]);
 
   const pct = Math.round(stats.overall * 100);
   const days = 35; // 日历显示最近5周（本地日期键，与 activity 一致）

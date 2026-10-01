@@ -230,6 +230,24 @@ test.describe("补全 · 闪卡撤销与限额交互", () => {
     expect(await todayNewCardCount(page)).toBe(0);
   });
 
+  test("17b. good→again→undo 序列：undo 只回补真实消耗的额度（M4 回归钉）", async ({ page }) => {
+    await resetProgress(page);
+    await gotoTab(page, "闪卡复习");
+
+    // 评一张 good（消耗 1 额度，计数 1）
+    await gradeCard(page, "good");
+    expect(await todayNewCardCount(page)).toBe(1);
+
+    // 评第二张 again（不消耗额度）
+    await gradeCard(page, "again");
+    expect(await todayNewCardCount(page)).toBe(1);
+
+    // undo 这张 again：它没消耗过额度，计数应保持 1（M4 修复前会误回补到 0）
+    await visibleScope(page).locator("button:has-text('撤销上一评')").click();
+    await page.waitForTimeout(200);
+    expect(await todayNewCardCount(page)).toBe(1);
+  });
+
   test("17. again 不消耗当日新卡额度（「不认识」的卡当天重学、明天还是新卡语义）", async ({ page }) => {
     await resetProgress(page);
     await gotoTab(page, "闪卡复习");

@@ -4,5 +4,13 @@ goal: MFU/loss 曲线诊断/DCGM 训练视角
 order: 18
 read: 20
 lab: 35
-concepts: []
-checklist: []
+concepts:
+  - MFU 计算与口径
+  - loss 曲线三形态
+  - DCGM 训练特有读法
+  - 训练三层指标
+checklist:
+  - 能默写 MFU 公式并先问口径再计算
+  - 能秒判 loss 锯齿/拐头/平线三种形态的病因
+  - 知道 SM 锯齿=数据或通信受限、XID 48/63 训练高发
+  - 算得出 8×H100 训 13B@12000tok/s 的 MFU≈11.8%

@@ -4,5 +4,15 @@ goal: 配额/计量/账单——把 GPU 变成可运营的资源
 order: 19
 read: 20
 lab: 35
-concepts: []
-checklist: []
+concepts:
+  - guarantees vs limits 配额
+  - 占用与有效 GPU·时
+  - 账单三要素
+  - 三大北极星报表
+  - 网络隔离红线
+checklist:
+  - 能说清占用 GPU·h 与有效 GPU·h 的差额度量什么
+  - 知道 checkpoint 池的保留策略（3 份+90 天过期）
+  - 能背平台三北极星（MFU/排队 P50/成本分摊）
+  - 能讲「一训练全网抖」的三层修复
+  - 会算排队积压的量纲（任务·小时而非 GPU·h）

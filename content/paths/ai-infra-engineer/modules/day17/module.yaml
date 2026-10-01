@@ -4,5 +4,14 @@ goal: LoRA/QLoRA——SFT 全链路与发布衔接
 order: 17
 read: 25
 lab: 40
-concepts: []
-checklist: []
+concepts:
+  - 全参/LoRA/QLoRA 三路线
+  - SFT 五步链路
+  - 评测红线
+  - adapter 与底座分离
+  - 常见微调失败模式
+checklist:
+  - 能说出 LoRA 学习率比全参大一个量级的原因
+  - 能背 SFT 五步并指出评测是发布红线
+  - 知道「训完答非所问」第一大翻车是格式不一致
+  - 能讲 adapter 合并/不合并的部署权衡

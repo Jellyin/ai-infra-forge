@@ -4,5 +4,12 @@ goal: 端到端 mini 流水线：数据→微调→评测→部署
 order: 20
 read: 15
 lab: 60
-concepts: []
-checklist: []
+concepts:
+  - 五步流水线串联
+  - 评测红线自动化
+  - 验收与对照
+checklist:
+  - 我的流水线一条命令能从数据跑到服务
+  - 评测红线是自动拦截的（非人工看）
+  - 有 held-out 评测集并真正把过关
+  - 底座 vs 微调 20 题对照表已落盘

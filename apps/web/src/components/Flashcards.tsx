@@ -17,7 +17,7 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
   const { cards, gradeCard, todayNewCardCount, recordNewCard, undoNewCard } = progress;
   const [flipped, setFlipped] = useState(false);
   /** 供撤销上一评（评审 P1-4） */
-  const [lastGraded, setLastGraded] = useState<{ key: string; state: CardState; wasNew: boolean } | null>(null);
+  const [lastGraded, setLastGraded] = useState<{ key: string; state: CardState; consumedQuota: boolean } | null>(null);
 
   const flat = useMemo<FlatCard[]>(() => {
     const out: FlatCard[] = [];
@@ -43,10 +43,11 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
 
   const grade = (g: Grade) => {
     if (!card) return;
-    const prev = { key: card.key, state: { ...newCardState(), ...state }, wasNew: isNewCard };
+    const consumedQuota = isNewCard && g !== "again";   // again 不消耗额度
+    const prev = { key: card.key, state: { ...newCardState(), ...state }, consumedQuota };
     const next = sm2Next(state, g);
     gradeCard(card.key, next);
-    if (isNewCard && g !== "again") recordNewCard();   // again 不算引入（明天还是新卡）
+    if (consumedQuota) recordNewCard();
     setLastGraded(prev);
     setFlipped(false);
   };
@@ -54,7 +55,8 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
   const undo = () => {
     if (!lastGraded) return;
     gradeCard(lastGraded.key, lastGraded.state);
-    if (lastGraded.wasNew) undoNewCard();   // 回补当日额度：撤销引入的新卡不占额度（缺陷2修复）
+    if (lastGraded.consumedQuota) undoNewCard();   // 只回补真实消耗过的额度（M4：
+    // good→again→undo 序列下 again 未消耗额度，按 wasNew 误判会多发 1 张）
     setLastGraded(null);
     setFlipped(false);
   };
