@@ -29,12 +29,24 @@ export function useProgress() {
   const [commands, setCommands] = useState<Record<string, number>>(() => read("commands", {}));
   const [quiz, setQuiz] = useState<Record<string, "known" | "unknown">>(() => read("quiz", {}));
   const [activity, setActivity] = useState<ActivityMap>(() => read("activity", {}));
+  /** 每日新卡引入计数（dateKey → 数量）：真·按天限额，防止一天刷完然后次日复习山 */
+  const [newCardsByDay, setNewCardsByDay] = useState<Record<string, number>>(() => read("newCardsByDay", {}));
 
   useEffect(() => write("checklist", checklist), [checklist]);
   useEffect(() => write("cards", cards), [cards]);
   useEffect(() => write("commands", commands), [commands]);
   useEffect(() => write("quiz", quiz), [quiz]);
   useEffect(() => write("activity", activity), [activity]);
+  useEffect(() => write("newCardsByDay", newCardsByDay), [newCardsByDay]);
+
+  const todayNewCardCount = newCardsByDay[dateKey(new Date())] ?? 0;
+
+  const recordNewCard = useCallback(() => {
+    setNewCardsByDay((prev) => {
+      const k = dateKey(new Date());
+      return { ...prev, [k]: (prev[k] || 0) + 1 };
+    });
+  }, []);
 
   const recordActivity = useCallback(() => {
     setActivity((prev) => {
@@ -69,9 +81,9 @@ export function useProgress() {
     return JSON.stringify({
       schema: 1,                       // 版本字段：未来结构变更时迁移用
       exportedAt: new Date().toISOString(),
-      checklist, cards, commands, quiz, activity,
+      checklist, cards, commands, quiz, activity, newCardsByDay,
     }, null, 2);
-  }, [checklist, cards, commands, quiz, activity]);
+  }, [checklist, cards, commands, quiz, activity, newCardsByDay]);
 
   const importData = useCallback((json: string): { ok: boolean; message: string } => {
     try {
@@ -82,6 +94,7 @@ export function useProgress() {
         commands?: Record<string, number>;
         quiz?: Record<string, "known" | "unknown">;
         activity?: Record<string, number>;
+        newCardsByDay?: Record<string, number>;
       };
       if (typeof parsed !== "object" || parsed === null) return { ok: false, message: "不是有效的导出文件" };
       if (parsed.schema !== 1) return { ok: false, message: `未知的 schema 版本: ${String(parsed.schema)}` };
@@ -91,13 +104,14 @@ export function useProgress() {
       setCommands(parsed.commands ?? {});
       setQuiz(parsed.quiz ?? {});
       setActivity(parsed.activity ?? {});
+      setNewCardsByDay(parsed.newCardsByDay ?? {});
       return { ok: true, message: "导入成功" };
     } catch {
       return { ok: false, message: "JSON 解析失败" };
     }
   }, []);
 
-  return { checklist, cards, commands, quiz, activity, toggleCheck, gradeCard, completeCommand, gradeQuiz, exportData, importData };
+  return { checklist, cards, commands, quiz, activity, newCardsByDay, todayNewCardCount, recordNewCard, toggleCheck, gradeCard, completeCommand, gradeQuiz, exportData, importData };
 }
 
 interface CardStateLite { reps: number; interval: number; ease: number; due: number }

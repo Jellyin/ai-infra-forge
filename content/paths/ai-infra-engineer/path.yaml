@@ -1,6 +1,9 @@
 id: ai-infra-engineer
-title: AI Infra / MaaS 平台工程师 · 10 天实战训练营
-subtitle: 面向老运维 · 主动回忆 + 间隔重复 + 命令肌肉记忆
+title: AI Infra / MaaS 平台工程师 · 30 天掌握计划
+subtitle: 10 天内容冲刺 + 20 天巩固深化 · 面向老运维 · 主动回忆 + 间隔重复 + 命令肌肉记忆
 audience: 5年+ 传统运维 / DevOps 工程师
-description: 从传统运维到 AI Infra / MaaS 平台工程师的 10 天实战路径：推理原理 + GPU 调度 + 高并发治理 + 可观测 + FinOps + 平台化。
-version: 0.1.0
+description: >-
+  三阶段：Day1-10 推理侧内容冲刺（读完即面试就绪）→ Day11-20 训练侧基础设施 → Day21-30
+  生产化纵深与终极面试关。间隔重复算法需要约 30 天完成记忆巩固——10 天学完内容，
+  30 天达成掌握。学完可投推理/服务化(MaaS)初中级岗位。
+version: 0.2.0

@@ -13,9 +13,9 @@ interface FlatCard { key: string; front: string; back: string; moduleTitle: stri
 const DAILY_NEW_LIMIT = 5;
 
 export default function Flashcards({ path, progress }: { path: PathContent; progress: Progress }) {
-  const { cards, gradeCard } = progress;
+  const { cards, gradeCard, todayNewCardCount, recordNewCard } = progress;
   const [flipped, setFlipped] = useState(false);
-  /** today 学过的新卡数（跨 tab/刷新由 localStorage 记忆） */
+  /** 供撤销上一评（评审 P1-4） */
   const [lastGraded, setLastGraded] = useState<{ key: string; state: CardState } | null>(null);
 
   const flat = useMemo<FlatCard[]>(() => {
@@ -26,19 +26,27 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
     return out;
   }, [path]);
 
-  const queue = useMemo(() => buildCardQueue(flat.map((c) => cards[c.key])), [flat, cards]);
+  /* 真·每日新卡限额：今日剩余额度 = 上限 - 今日已引入（跨会话/刷新按天持久化） */
+  const remainingQuota = Math.max(0, DAILY_NEW_LIMIT - todayNewCardCount);
+  const queue = useMemo(
+    () => buildCardQueue(flat.map((c) => cards[c.key]), undefined, { dailyNewLimit: remainingQuota }),
+    [flat, cards, remainingQuota],
+  );
   const remaining = queue.order.length;   // 本次会话剩余（due + 限额内新卡）
 
   const headIdx = queue.order[0];
   const card = headIdx != null ? flat[headIdx] : undefined;
   const state: CardState = { ...newCardState(), ...(card ? cards[card.key] : undefined) };
+  /** 当前卡是否为今天首次引入的新卡（需要计入每日额度） */
+  const isNewCard = state.reps === 0 && state.interval === 0 && state.due === 0;
 
   const grade = (g: Grade) => {
     if (!card) return;
     const prev = { key: card.key, state: { ...newCardState(), ...state } };
     const next = sm2Next(state, g);
     gradeCard(card.key, next);
-    setLastGraded(prev);       // 供撤销（评审 P1-4）
+    if (isNewCard && g !== "again") recordNewCard();   // again 不算引入（明天还是新卡）
+    setLastGraded(prev);
     setFlipped(false);
   };
 
