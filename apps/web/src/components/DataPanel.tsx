@@ -8,6 +8,8 @@ export default function DataPanel({ progress, onClose }: { progress: Progress; o
   const { exportData, importData } = progress;
   const fileRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
+  /** 导入前确认（覆盖是破坏性操作，评审 M） */
+  const [pendingFile, setPendingFile] = useState<{ name: string; json: string } | null>(null);
 
   const download = () => {
     const blob = new Blob([exportData()], { type: "application/json" });
@@ -23,8 +25,15 @@ export default function DataPanel({ progress, onClose }: { progress: Progress; o
   const onFile = async (f: File | undefined) => {
     if (!f) return;
     const text = await f.text();
-    const r = importData(text);
+    setPendingFile({ name: f.name, json: text });
+    setStatus(null);
+  };
+
+  const confirmImport = () => {
+    if (!pendingFile) return;
+    const r = importData(pendingFile.json);
     setStatus(r);
+    setPendingFile(null);
     if (r.ok) setTimeout(onClose, 1200);
   };
 
@@ -39,11 +48,26 @@ export default function DataPanel({ progress, onClose }: { progress: Progress; o
 
         <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap", marginTop: "var(--space-3)" }}>
           <button className="btn btn--primary" onClick={download}>⬇ 导出进度</button>
-          <button className="btn" onClick={() => fileRef.current?.click()}>⬆ 导入进度</button>
+          <button className="btn" onClick={() => fileRef.current?.click()}>⬆ 选择导入文件</button>
           <input ref={fileRef} type="file" accept="application/json,.json" hidden
             onChange={(e) => onFile(e.target.files?.[0])} />
           <button className="btn" onClick={onClose}>关闭</button>
         </div>
+
+        {pendingFile && (
+          <div style={{ marginTop: "var(--space-4)", padding: "var(--space-3)", border: "1px solid var(--status-warning)", borderRadius: "var(--radius-s)" }}>
+            <p style={{ margin: "0 0 var(--space-2)", fontWeight: 600 }}>
+              确认导入 {pendingFile.name}？
+            </p>
+            <p className="card__subtitle" style={{ margin: 0 }}>
+              当前全部进度（清单/闪卡/命令/面试/连续天数）将被此文件内容覆盖，操作不可撤销。
+            </p>
+            <div style={{ display: "flex", gap: "var(--space-2)", marginTop: "var(--space-3)" }}>
+              <button className="btn btn--primary" onClick={confirmImport}>确认覆盖导入</button>
+              <button className="btn" onClick={() => setPendingFile(null)}>取消</button>
+            </div>
+          </div>
+        )}
 
         {status && (
           <p style={{ marginTop: "var(--space-3)", color: status.ok ? "var(--status-good)" : "var(--status-critical-text)", fontWeight: 600 }} role="status">
