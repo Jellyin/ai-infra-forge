@@ -1,6 +1,7 @@
-/** 极简 markdown 渲染：支持标题/段落/代码块/列表/粗体/行内代码/表格/引用。
+/** 极简 markdown 渲染：支持标题/段落/代码块/列表/粗体/行内代码/表格/引用/<details> 折叠块。
  * 内容受控（zod 校验后进入），esc() 转义 & < > 阻断标签注入，无属性插值。
- * 表格渲染为真正的 <table>（连续 | 行收集成块，分隔行跳过）。 */
+ * 表格渲染为真正的 <table>（连续 | 行收集成块，分隔行跳过）。
+ * <details><summary>纯文本</summary> 独立成行 → 折叠块，内部按普通行渲染。 */
 
 function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -20,7 +21,7 @@ export function renderMarkdown(md: string): string {
   const body = md.replace(/^---\n[\s\S]*?\n---\n/, "");
   const lines = body.split("\n");
   const out: string[] = [];
-  let inCode = false, inList = false;
+  let inCode = false, inList = false, inDetails = false;
   /** 收集中的表格行 */
   let tableRows: string[] = [];
 
@@ -59,6 +60,21 @@ export function renderMarkdown(md: string): string {
     }
     if (inCode) { out.push(esc(line)); continue; }
 
+    if (!inDetails) {
+      const d = line.match(/^<details><summary>(.*)<\/summary>\s*$/);
+      if (d) {
+        flushTable(); closeList();
+        out.push(`<details class="md-details"><summary class="md-details__summary">${inline(d[1] ?? "")}</summary>`);
+        inDetails = true;
+        continue;
+      }
+    } else if (line.trim() === "</details>") {
+      flushTable(); closeList();
+      out.push("</details>");
+      inDetails = false;
+      continue;
+    }
+
     if (/^\s*\|/.test(line)) {
       closeList();
       tableRows.push(line.trim());
@@ -94,6 +110,7 @@ export function renderMarkdown(md: string): string {
   }
   flushTable();
   if (inCode) out.push("</code></pre>");
+  if (inDetails) out.push("</details>");
   closeList();
   return out.join("\n");
 }

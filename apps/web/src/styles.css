@@ -288,6 +288,12 @@ body {
 .md-table th, .md-table td { border: 1px solid var(--grid-line); padding: var(--space-1) var(--space-2); text-align: left; color: var(--text-secondary); }
 .md-table th { background: var(--surface-raise); color: var(--text-primary); font-weight: 600; }
 .md-code { font-family: var(--font-mono); font-size: 0.85em; background: var(--surface-raise); padding: 1px 5px; border-radius: var(--radius-xs); color: var(--accent-text); }
+.md-body .md-details { margin: var(--space-3) 0; border: 1px solid var(--border-hairline); border-radius: var(--radius-s); background: var(--surface-raise); }
+.md-body .md-details__summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; padding: var(--space-2) var(--space-3); font-weight: 600; color: var(--text-primary); list-style: none; }
+.md-body .md-details__summary::-webkit-details-marker { display: none; }
+.md-body .md-details__summary::before { content: "▸"; margin-right: var(--space-2); color: var(--text-secondary); transition: transform 0.15s; }
+.md-body .md-details[open] .md-details__summary::before { transform: rotate(90deg); }
+.md-body .md-details .md-p:last-child { margin-bottom: var(--space-3); }
 
 @media (max-width: 640px) {
   .app-header { flex-direction: column; align-items: flex-start; }
