@@ -38,6 +38,25 @@ export default function Dashboard({ path, progress, onGoTab, onOpenModule }: Pro
         if (quiz[quizKey(path.id, m, q)] === "known") knownQuiz++;
       }
     }
+    const now = Date.now();
+    let nextChecklistModule: PathContent["modules"][number] | undefined;
+    let dueReviewModule: typeof path.modules[number] | undefined;
+    let untrainedCommandModule: typeof path.modules[number] | undefined;
+    for (const m of path.modules) {
+      if (!nextChecklistModule && m.checklist.some((_, i) => !checklist[`${path.id}:${m.id}:${i}`])) {
+        nextChecklistModule = m;
+      }
+      if (!dueReviewModule && m.flashcards.some((c) => {
+        const s = cards[cardKey(path.id, m, c)];
+        return s && s.reps > 0 && s.due <= now;
+      })) {
+        dueReviewModule = m;
+      }
+      if (!untrainedCommandModule && m.commands.some((c) => !commands[commandKey(path.id, m, c)])) {
+        untrainedCommandModule = m;
+      }
+      if (nextChecklistModule && dueReviewModule && untrainedCommandModule) break;
+    }
     const p = (a: number, b: number) => (b ? a / b : 0);
     return {
       overall: (p(doneChecks, totalChecks) + p(mastery.good, totalCards) + p(doneCmds, totalCmds) + p(knownQuiz, totalQuiz)) / 4,
@@ -50,6 +69,9 @@ export default function Dashboard({ path, progress, onGoTab, onOpenModule }: Pro
         dailyNewLimit: Math.max(0, 5 - todayNewCardCount),
       }).order.length,
       totalChecks,
+      nextChecklistModule,
+      dueReviewModule,
+      untrainedCommandModule,
     };
   }, [path, checklist, cards, commands, quiz, activity, todayNewCardCount]);
 
@@ -63,23 +85,44 @@ export default function Dashboard({ path, progress, onGoTab, onOpenModule }: Pro
   });
   const activeDays = cells.filter((c) => c.on).length;
 
-  /* 零进度首屏：给新用户一个「从哪开始」的答案（评审 P0-1） */
+  /* 「下一步」卡片常驻：fresh 时引导开始 Day 1，有进度时按 复习 > 继续清单 > 训练命令
+   * 的优先级给出唯一 CTA。修复 Day 1 完成后入口消失的问题。 */
   const isFresh = stats.check[0] === 0 && stats.totalCards === stats.mastery.new;
-  const firstUndone = path.modules.find((m) => m.checklist.some((_, i) => !checklist[`${path.id}:${m.id}:${i}`]));
+  const nextCta = (() => {
+    if (isFresh && stats.nextChecklistModule && onOpenModule) {
+      const m = stats.nextChecklistModule;
+      return { label: `开始 Day ${m.order} · ${m.title}`,
+        sub: "每天 15 分钟：读教程 → 勾清单 → 清闪卡。间隔重复（SM-2）会替你安排复习。",
+        onClick: () => onOpenModule(m.id) };
+    }
+    const r = stats.dueReviewModule;
+    if (r) {
+      return { label: `复习 Day ${r.order} · ${r.title} 闪卡`,
+        sub: "间隔重复按你的遗忘曲线挑出了到期卡。先复习，再学新内容，记忆更牢。",
+        onClick: () => onGoTab?.("flashcards") };
+    }
+    const c = stats.nextChecklistModule;
+    if (c && onOpenModule) {
+      return { label: `继续 Day ${c.order} · ${c.title}`,
+        sub: "继续阅读 / 勾清单 / 清闪卡。已完成的天会自动安排复习。",
+        onClick: () => onOpenModule(c.id) };
+    }
+    const t = stats.untrainedCommandModule;
+    if (t) {
+      return { label: `训练 Day ${t.order} · ${t.title} 命令`,
+        sub: "命令训练帮你建立肌肉记忆。先看完教程，再来刷命令。",
+        onClick: () => onGoTab?.("commands") };
+    }
+    return null;
+  })();
 
   return (
     <>
-      {isFresh && (
+      {nextCta && (
         <div className="card" style={{ borderColor: "var(--series-1)" }}>
-          <h2 className="card__title">从这里开始</h2>
-          <p className="card__subtitle">
-            每天 15 分钟：读教程 → 勾清单 → 清闪卡。间隔重复（SM-2）会替你安排复习，忘了的卡自动再出现。
-          </p>
-          {firstUndone && onOpenModule && (
-            <button className="btn btn--primary" onClick={() => onOpenModule(firstUndone.id)}>
-              开始 {firstUndone.title}（阅读 {firstUndone.read ?? 20} + 动手 {firstUndone.lab ?? 30} 分钟）
-            </button>
-          )}
+          <h2 className="card__title">下一步</h2>
+          <p className="card__subtitle">{nextCta.sub}</p>
+          <button className="btn btn--primary" onClick={nextCta.onClick}>{nextCta.label}</button>
         </div>
       )}
 
