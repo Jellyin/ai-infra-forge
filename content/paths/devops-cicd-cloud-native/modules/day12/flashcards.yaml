@@ -1,0 +1,24 @@
+- id: day12-c1
+  front: 弃用 CI 里直接 kubectl apply 的四条理由是什么？
+  back: '① 凭证：CI 必须长期持有 prod 集群的 kubeconfig，任何能改流水线的人都等于拿到钥匙；② 漂移：apply 是一次性 push，之后手动热修无人知晓、无人纠正；③ 审计：谁在何时 apply 了什么散落在日志里；④ 不可复现：集群状态由动作决定，无法从 Git 重建。根因是「真实状态由动作而非声明定义」。'
+- id: day12-c2
+  front: GitOps 四条原则是什么？其中最能解释「为什么更安全」的是哪条？
+  back: 声明式；版本化且不可变（存 Git）；自动拉取（集群内 agent 主动 pull）；持续协调（比对期望与真实并收敛/告警）。最关键的是「自动拉取」——集群凭证不出集群，CI 不再需要 prod 钥匙，漂移被持续检测。
+- id: day12-c3
+  front: ArgoCD 五个组件各自职责（API Server / Repo Server / Application Controller / Redis / Dex）？
+  back: API Server 提供 REST/gRPC 与 UI/CLI 后端并鉴权；Repo Server 克隆 Git、渲染 Helm/Kustomize/plain 并缓存；Application Controller 是大脑，对比 Git 期望与集群真实、计算状态并执行同步；Redis 是缓存/共享状态；Dex 是可选的 SSO 对接。排障顺序：Controller → Repo Server → API Server/Redis。
+- id: day12-c4
+  front: Application 的 syncPolicy 三个开关（自动化、prune、selfHeal）分别意味着什么取舍？
+  back: 'automated：Git 合并即部署，省略则需人工点同步（prod 适合先手动后自动）；prune：Git 删除的资源在集群也删，风险是渲染出错时误删，宜先在无关环境验证；selfHeal：手动改动自动改回 Git 状态，与运维热修天然冲突。三者都只对「Git 是权威」的资源成立。'
+- id: day12-c5
+  front: 漂移检测后，什么时候该自愈，什么时候只报警？
+  back: '该自愈：期望对 Git 零妥协的资源/环境（无状态服务、配置类、dev/staging）。只报警：① 有人正在应急处理；② 字段由别的控制器管（HPA 改 replicas、Operator 改写）。对第二权威字段用 ignoreDifferences 排除，或整个环境只报警。'
+- id: day12-c6
+  front: CI 与 CD 的职责边界怎么划？
+  back: CI 产出制品（构建、推镜像、测试、扫描）并把声明提交进 Git（机器人账号改 image digest）；CD（ArgoCD）从 Git 拉取并同步到集群。关键：CI 不碰集群、不持有 kubeconfig；声明变更走 PR，回滚 = revert 那次提交。
+- id: day12-c7
+  front: 为什么声明里要用镜像 digest 而不是可变 tag？
+  back: 'digest（image@sha256:...）不可变，能保证「部署的就是测试过的那一份」，让审计有意义；可变 tag（如 latest）会随时间指向不同内容，事后无法确证当时跑的是哪份制品，等于放弃可复现。'
+- id: day12-c8
+  front: 集群里出现漂移（OutOfSync）的典型来源有哪些？
+  back: 有人手动 kubectl edit/scale；其他控制器改写字段（HPA 改 replicas、VPA 改 requests）；准入 webhook 注入 sidecar 或补默认值。这些都能让「集群真实」与「Git 期望」分叉，自愈会把它们改回——除非该字段本就该由别人管。

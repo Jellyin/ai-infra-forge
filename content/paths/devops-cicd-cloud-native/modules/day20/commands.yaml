@@ -1,0 +1,10 @@
+- hint: '5xx 错误比例（错误率原料，先有 counter 才有 SLI）'
+  cmd: sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))
+- hint: 'burn rate（针对 99.9% SLO；1 − 0.999 就是错误预算率）'
+  cmd: sum(rate(http_requests_total{status=~"5.."}[1h])) / sum(rate(http_requests_total[1h])) / (1 - 0.999)
+- hint: 'p99 延迟 SLI（用直方图分位数，需 _bucket 与 _count）'
+  cmd: histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))
+- hint: '经 Prometheus HTTP API 取 burn rate 供门禁脚本判定'
+  cmd: curl -sG "$PROM_URL/api/v1/query" --data-urlencode 'query=<burn rate 表达式>' | jq -r '.data.result[0].value[1]'
+- hint: '校验 Prometheus 告警/记录规则语法（随发行包提供，参数以官方文档为准）'
+  cmd: promtool check rules slo-rules.yml

@@ -1,0 +1,10 @@
+- hint: 建用于权限过滤的 keyword 载荷索引（否则过滤是线性扫描）
+  cmd: 'curl -s -X PUT "http://localhost:6333/collections/kb_docs/index?wait=true" -H "Content-Type: application/json" -d "{\"field_name\":\"department\",\"field_schema\":\"keyword\"}"'
+- hint: 建带 payload_m 的集合（过滤时也从载荷图检索，减少过滤导致的召回损失）
+  cmd: 'curl -s -X PUT "http://localhost:6333/collections/kb_docs" -H "Content-Type: application/json" -d "{\"vectors\":{\"size\":1024,\"distance\":\"Cosine\"},\"hnsw_config\":{\"m\":16,\"ef_construct\":128,\"payload_m\":16}}"'
+- hint: pgvector 建 HNSW 索引（m 与 ef_construction 权衡召回与构建时间）
+  cmd: "psql \"$PGURL\" -c 'CREATE INDEX ON chunks USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 128);'"
+- hint: 给块表开启行级安全，把权限下沉到数据库（pgvector + Postgres RLS）
+  cmd: "psql \"$PGURL\" -c \"ALTER TABLE chunks ENABLE ROW LEVEL SECURITY;\" -c \"CREATE POLICY dept_scope ON chunks USING (department = current_setting('app.current_dept'));\""
+- hint: 带权限过滤的向量检索（Qdrant，检索期即裁掉越权候选）
+  cmd: 'curl -s -X POST "http://localhost:6333/collections/kb_docs/points/search" -H "Content-Type: application/json" -d "{\"vector\":[0.1,0.2],\"limit\":5,\"filter\":{\"must\":[{\"key\":\"department\",\"match\":{\"value\":\"hr\"}}]}}"'

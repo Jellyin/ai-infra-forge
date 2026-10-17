@@ -1,0 +1,21 @@
+id: day13
+title: ArgoCD 规模化：多环境、多集群与治理
+goal: 一个集群一套手写 Application 撑不过三个环境
+order: 13
+track: 轨道 3 · CD：GitOps 与 ArgoCD
+read: 22
+lab: 35
+concepts:
+  - App-of-Apps 与 ApplicationSet 的适用边界
+  - 目录式生成：目录结构即环境矩阵
+  - 多集群注册与集群内的权限隔离
+  - Projects 与 RBAC：谁能看到、改到哪些应用
+  - Sync Waves 与 Hooks：顺序化依赖处理
+  - 密钥进入集群：Sealed Secrets / External Secrets / Vault
+  - 通知与审计：谁在什么时候同步了什么
+checklist:
+  - 能用 ApplicationSet 把 N 个环境/集群一次声明出来
+  - 能设计一套 Projects/RBAC 划分
+  - 能用 Sync Waves 解决依赖顺序问题
+  - 能选出适合的密钥方案并说明理由
+  - 能配置同步通知与审计留痕

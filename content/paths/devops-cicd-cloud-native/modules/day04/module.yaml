@@ -1,0 +1,20 @@
+id: day04
+title: CI 内嵌的安全与质量工具链
+goal: 把安全与合规检查内嵌进流水线，而不是上线前临时抱佛脚
+order: 4
+track: 轨道 1 · 流水线主干与 CI 内嵌能力
+read: 22
+lab: 35
+concepts:
+  - 内置模板 vs 自建：GitLab 安全模板的覆盖与局限
+  - SAST / 依赖扫描 / Secret Detection / 容器扫描 / License 合规 / DAST 各自管什么
+  - allowlist、基线、以及「不阻断」策略的正确用法
+  - 结果如何回流到 MR：报告、内联注释、合并门禁
+  - Actions 侧对应：codeql、dependency-review、SARIF 上传
+  - 误报治理与「安全检查被全员静音」的反模式
+checklist:
+  - 能说清六类扫描各自能发现什么、发现不了什么
+  - 能把扫描结果接入 MR 门禁并设置分级阻断
+  - 能设计一套误报 allowlist 的评审与回收机制
+  - 能给出本项目的安全门禁阈值建议
+  - 能对比 GitLab 模板与 Actions 方案的取舍

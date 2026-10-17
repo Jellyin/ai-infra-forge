@@ -1,0 +1,20 @@
+id: day10
+title: 密钥与身份治理
+goal: 消灭长期密钥，把权限压到刚好够用
+order: 10
+track: 轨道 2 · 制品与供应链
+read: 20
+lab: 30
+concepts:
+  - CI 变量的分层：masked / protected / 环境级
+  - 变量泄露的常见路径（日志、artifact、fork PR、恶意 job）
+  - OIDC 免密上云：AWS / GCP / Azure 的信任配置
+  - HashiCorp Vault 与动态凭证
+  - 最小权限与「一个 job 一个身份」
+  - 密钥泄露的应急：轮换、审计、影响面评估
+checklist:
+  - 能列出本项目所有长期密钥并给出替代方案
+  - 能配好一条 OIDC 免密链路（至少一家云）
+  - 能解释 fork PR 场景下的密钥风险与防护
+  - 能设计密钥轮换与审计流程
+  - 能写出一次密钥泄露的应急步骤

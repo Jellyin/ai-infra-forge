@@ -26,7 +26,7 @@ async function gotoTab(page: Page, tab: string) {
   await page.waitForTimeout(250);
 }
 
-/** 当前可见的 tab 容器（main > div[style*=block]）——限定选择器作用域 */
+/** 当前可见的 tab 容器（面板用 hidden 属性切换）——限定选择器作用域 */
 function visibleScope(page: Page): Locator {
   return page.locator("main > div:visible");
 }
@@ -46,7 +46,7 @@ test.describe("冒烟 · 关键链路", () => {
   test("1. 首屏零进度：引导卡 + Day1 入口存在", async ({ page }) => {
     await resetProgress(page);
     await expect(page.locator(".app-header__title")).toContainText("30 天掌握计划");
-    await expect(page.locator("text=从这里开始").first()).toBeVisible();
+    await expect(page.locator("text=下一步").first()).toBeVisible();
     await expect(page.locator("button:has-text('开始')").first()).toBeVisible();
   });
 

@@ -1,0 +1,20 @@
+id: day15
+title: 清单工程化与发布一致性
+goal: 让集群里的东西和 Git 里写的一字不差
+order: 15
+track: 轨道 3 · CD：GitOps 与 ArgoCD
+read: 20
+lab: 30
+concepts:
+  - Helm 与 Kustomize 的取舍：模板化 vs 叠加
+  - overlay 目录组织与「环境差异最小化」
+  - 镜像 digest 进入清单：CI 提交变更 vs ArgoCD Image Updater
+  - ConfigMap/Secret 变更后的热更新与重启策略
+  - 探针、资源请求/限制、PDB 的正确姿势
+  - 清单校验：schema、策略检查、dry-run 与 diff 预览
+checklist:
+  - 能为团队定出 Helm/Kustomize 的选型并说明理由
+  - 能设计一套 overlay 组织方式
+  - 能说明 digest 注入的两种方式各自取舍
+  - 能正确配置探针与资源请求避免层层踩坑
+  - 能在合并前给出集群会怎么变的 diff 预览

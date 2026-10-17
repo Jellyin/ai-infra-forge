@@ -1,0 +1,10 @@
+- hint: 起 vLLM 的 OpenAI 兼容端点（--max-model-len 即上下文预算上限）
+  cmd: python -m vllm.entrypoints.openai.api_server --model Qwen/Qwen2.5-7B-Instruct --served-model-name qwen7b --max-model-len 8192 --port 8000
+- hint: 用 curl 调 chat/completions 并抽出回答正文（temperature=0 便于复现）
+  cmd: 'curl -s http://localhost:8000/v1/chat/completions -H "Content-Type: application/json" -d "{\"model\":\"qwen7b\",\"temperature\":0,\"messages\":[{\"role\":\"user\",\"content\":\"PROMPT\"}]}" | python -c "import sys,json;print(json.load(sys.stdin)[\"choices\"][0][\"message\"][\"content\"])"'
+- hint: 校验引用编号是否越界（列出回答里出现的所有 [[n]]）
+  cmd: 'grep -oE "\[\[[0-9]+\]\]" answer.txt | sort -u'
+- hint: 统计一份回答是否触发拒答（拒答标记为 INSUFFICIENT_EVIDENCE）
+  cmd: 'grep -c "INSUFFICIENT_EVIDENCE" answer.txt'
+- hint: 无 GPU 时用 CPU 小模型兜底（接口同样 OpenAI 兼容，可直接对照）
+  cmd: ollama serve & ollama pull qwen2.5:3b

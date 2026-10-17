@@ -1,0 +1,12 @@
+- id: day05-q1
+  q: 一条流水线「变慢了」，怎么判断瓶颈在排队还是执行？修复方向有何不同？
+  a: '取流水线全部 job 的 queued_duration 与 duration 分别求和：前者是 job 创建到被 runner 认领，后者是 runner 开始到结束。排队占比高说明是 runner 供给不足（加 runner、调 concurrent/limit、错峰触发、用 resource_group 串行化共享资源），且排队时间是 100% 的浪费；执行占比高说明是脚本、缓存、镜像或并行度问题（优化缓存、拆分 stage、提高并行）。两者都高时优先解排队，因为它是零代码风险的收益。'
+- id: day05-q2
+  q: artifact 与 cache 会造成怎样的隐性存储账单？你会如何设计保留策略？
+  a: '不写 expire_in 时产物按实例默认保留期累积（常见 30 天，随配置与版本演进，以官方文档为准），paths 写太宽会把整目录甚至依赖一起上传，体积翻十倍还拖慢下游下载；cache 同样占用存储。策略按用途分级：MR 流水线 expire_in 1 day、主分支 1 week、tag/release 更长，artifacts:reports 单独设定，并定期核对 Usage quotas 的实际用量。缓存命中率本身没有现成指标，要从日志派生（GitLab grep「Checking cache for」与「Successfully extracted cache」，Actions 看 actions/cache 的「Cache restored from key」与「Cache not found」）。'
+- id: day05-q3
+  q: runner 饥饿（starvation）的成因是什么？有哪些缓解手段？
+  a: '成因是结构性不公：少数标签绑定的 runner 被某一项目或某类长任务长期占用，其他项目的 job 永远排不上；也发生在专用 tag 的 runner 池过小、重活（如多架构构建）独占资源时。缓解：给重活单独分 runner、按项目/组划分 runner、用 resource_group 限制共享资源的并发占用、为热门 tag 扩容并设合理的 concurrent/limit。与「挤兑」不同，饥饿不是瞬时尖峰而是长期分配问题。'
+- id: day05-q4
+  q: Review Apps 的资源泄漏怎么防？GitLab 与 GitHub Actions 的差异是什么？
+  a: 'GitLab 可用 environment:auto_stop_in（环境随 Deployment 过期自动停）配合 on_stop 或 action: stop 的清理 job 主动回收；关键是让「销毁」成为声明式流程的一部分。GitHub Actions 没有等价的 auto_stop 开关，需要用定时 workflow 主动销毁对应环境，因此更容易被遗忘而造成集群资源无限期泄漏——和 artifact 一样，是必须显式治理的隐性账单。'

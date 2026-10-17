@@ -1,0 +1,24 @@
+- id: day09-c1
+  front: SBOM、provenance、签名分别回答什么问题？为什么不能混为一谈？
+  back: 'SBOM（物料清单）回答「制品里有什么组件」；provenance（构建来源证明）回答「制品是怎么、由谁构建的」；签名回答「制品/声明的完整性与身份」。三者可互相引用（provenance 里带 SBOM digest）但不可替代：有 SBOM 不等于知道来源，有签名不等于证明怎么构建的。'
+- id: day09-c2
+  front: CycloneDX 与 SPDX 两种 SBOM 格式各偏重什么？
+  back: 'CycloneDX（OWASP）偏安全用例，JSON/XML，可携带 vulnerabilities 段；SPDX（Linux Foundation，即 ISO/IEC 5962:2021）偏许可证与合规、字段更规范。都表达组件+版本+依赖关系，选哪个看你的下游扫描/合规工具支持哪种。'
+- id: day09-c3
+  front: SBOM 应该在什么时候生成、存在哪里？
+  back: '构建之后对「最终镜像」扫描生成——因为关心的是发出去的那份镜像里有什么（基础镜像的系统包常是漏洞大头）。存放不要只当会过期的流水线产物：把 SBOM 与制品绑定，作为 attestation 附着在同一 digest 上（如 cosign attach sbom），这样拉到该 digest 就能取到 SBOM。'
+- id: day09-c4
+  front: SLSA v1.0 Build track 的 L1/L2/L3 各自保证什么？
+  back: 'L1：有 provenance、记录构建过程与产出，但不保证不可伪造；L2：provenance 由可信构建平台生成并签名，防构建后被替换；L3：构建平台加固、用户的构建步骤无法访问签名密钥、环境隔离，防构建过程本身被投毒。旧版 0.4 是 1–4 级，v1.0 重组为 track+级别，以 slsa.dev 为准。'
+- id: day09-c5
+  front: cosign keyless 的三个组件（OIDC / Fulcio / Rekor）各做什么？
+  back: 'OIDC：提供 CI 的身份（如 repo:org/repo:ref:refs/heads/main）；Fulcio：CA，把该身份绑到一次性公钥，签出有效期只有分钟级的短期证书；Rekor：透明日志，记录签名事件、事后可查可审计。好处是没有长期私钥可泄露，治理对象从密钥变成身份。'
+- id: day09-c6
+  front: keyless 与密钥签名两条路，怎么取舍？
+  back: 'keyless 无长期私钥、身份即权限、随 IdP 生命周期走，是推荐默认；代价是依赖 OIDC 与网络/信任根，验签必须显式给出 identity 与 issuer。密钥签名适合离线/无 OIDC 环境，但私钥要进 KMS/Vault、有轮换与吊销路径。两条路都逃不掉信任根的分发与更新。'
+- id: day09-c7
+  front: 多架构镜像该对 index 签还是对单架构 manifest 签？
+  back: '对 index（manifest list）digest 签。消费者按 tag 拉取解析到的就是 index digest，只有对 index 签名，验签才能通过；只对单架构签会导致按 tag 验签失败。签什么、验什么必须一一对应——最稳写法是签 index、验 index，部署清单也引用 index digest。'
+- id: day09-c8
+  front: Kyverno 与 OPA Gatekeeper 在「验签」上的区别是什么？
+  back: 'Kyverno 内建 verifyImages，keyless attestor 直接支持 Fulcio/Rekor，可声明 validationFailureAction: Enforce 在准入阶段拒绝未签名镜像。Gatekeeper 是策略引擎、不原生验签，需要外挂验证器（如 CNCF Ratify）或外部数据把验签结果喂给策略——装了 Gatekeeper 不等于会验签。'

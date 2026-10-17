@@ -1,0 +1,12 @@
+- id: day10-q1
+  q: 团队的部署 job 用一个长期云 access key（masked + protected）。为什么这仍被判为风险？
+  a: 'masked 只挡日志里的原样出现，编码/切片就能绕过；protected 只限制注入到受保护分支，不约束受保护分支上能改 CI 配置的人，也不防 job 主动外传。更根本的是它有「长期值」可被泄露和复用。正解是换成 OIDC：CI 用 OIDC 身份换短期云凭证，云侧信任策略按 issuer/audience/subject 条件收窄到具体分支/环境，没有可长期泄露的密钥。'
+- id: day10-q2
+  q: 一个 workflow 用 pull_request_target 并在其中 checkout 了 PR 的 head 代码。风险是什么？怎么改？
+  a: 'pull_request_target 会带着基仓库的 secrets 运行，而 checkout 进来的却是攻击者能修改的 PR 代码——改一行构建脚本即可把这些 secrets 外传。这是被反复利用的经典陷阱。改法：不要 checkout 未信任的 head 代码；确需在 fork 场景下做需要 secrets 的事，用受控的后续工作流或人工审批；能用 pull_request（默认不传 secrets）就用它。'
+- id: day10-q3
+  q: 发现一个云密钥被泄露，团队删掉了代码里的值并认为处理完毕。这为什么不对？正确顺序是什么？
+  a: '删除不等于收回——值一旦泄露就已失陷，从源码/变量里删掉不会让它失效。正确顺序：先到 provider 侧轮换（作废旧凭证、签发新的），再审计（云审计日志/GitLab audit events，还原谁在何时做了什么），评估影响面（该身份理论上能触达的全部资源），清场（作废会话、检查是否被种持久化），收口（缩短 TTL、收紧 subject 条件、把长期密钥换成 OIDC/Vault 动态凭证），按合规需要通报。'
+- id: day10-q4
+  q: 「一个 job 一个身份」在实践中怎么落地？
+  a: '每个 job 用恰好够用、独立的身份：build/test/deploy/scan 各用各的角色，云侧信任策略的 subject 条件分别收窄到该 job 需要的分支/环境，权限按 job 最小化（deploy 才有生产写、test 只读）。这样出事后能回答「是哪个 job、哪次运行动的手」，审计才有意义——共用万能身份会让这个问题无法回答。'

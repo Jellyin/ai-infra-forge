@@ -1,0 +1,12 @@
+- id: day18-q1
+  q: 有人给推理服务配了「CPU 利用率 > 70% 就扩容」的 HPA，问题出在哪？
+  a: 'CPU 利用率不是推理的瓶颈指标。推理瓶颈在 GPU 排队与 KV Cache：Decode 阶段 GPU 打满时 CPU 可能只有 20%，按 CPU 扩容毫无动作；而 Prefill/分词忙时 CPU 高但 GPU 未满，会误扩容。应改用以队列长度（vllm:num_requests_waiting）或 TTFT 为核心的 external metrics（Prometheus adapter / KEDA）。'
+- id: day18-q2
+  q: 灰度中错误率和 TPOT 都正常，只有 TTFT P95 翻倍，该继续放量吗？
+  a: '不该。TTFT 是首字延迟，是流式体验的核心 SLA，翻倍属明显回退。TTFT 只含到第一个 token，与总延迟不是一回事：TPOT 正常说明生成侧没问题，退化集中在 Prefill/首字节。动作是停在当前小权重或回滚，排查候选版 prefill 变慢、注意力后端/并行配置、max_num_seqs/max_model_len 变化。'
+- id: day18-q3
+  q: 一个推理 Pod 一直 CrashLoopBackOff，日志首行是 exec format error，怎么解释？
+  a: '镜像架构与节点架构不匹配：单架构镜像（如仅 amd64）落到了 arm64 节点（Graviton/Ampere）。调度器只看资源与亲和性、不会因镜像架构不匹配拒绝调度，所以会「调度成功但容器起不来」。对策：镜像构建成多架构 manifest，或让 nodeSelector/亲和性与镜像架构对齐（kubernetes.io/arch）。训练镜像同理。'
+- id: day18-q4
+  q: 从模型制品到线上服务，这条链路里每一步谁负责？
+  a: 'CI（GitLab CI 等）产出 digest 化的模型制品并提交清单；ArgoCD 以 Git 为唯一事实源把清单同步到集群（Day 12）；Argo Rollouts 按 steps 逐步切流量做灰度（Day 14）；AnalysisTemplate 查 Prometheus 的 TTFT/错误率，超阈值自动回滚。模型换版=改清单里的 digest，而非手工 kubectl set image。'

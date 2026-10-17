@@ -1,0 +1,10 @@
+- hint: 用 docker 起一个单机 Qdrant（数据落盘，可反复重启）
+  cmd: docker run -d --name qdrant -p 6333:6333 -p 6334:6334 -v "$(pwd)/qdrant_storage:/qdrant/storage" qdrant/qdrant
+- hint: 建集合并指定维度、度量与 HNSW 参数（REST 里度量写作 Cosine / Euclid / Dot / Manhattan）
+  cmd: curl -s -X PUT --json '{"vectors":{"size":512,"distance":"Cosine"},"hnsw_config":{"m":16,"ef_construct":100}}' http://localhost:6333/collections/kb_chunks
+- hint: 批量写入点（wait=true 保证写完即可查；一次一批而不是一条一条）
+  cmd: curl -s -X PUT --json '{"points":[{"id":1,"vector":[...],"payload":{"doc":"a.md","chunk":0}}]}' 'http://localhost:6333/collections/kb_chunks/points?wait=true'
+- hint: 发一次检索（limit 就是 top-k，with_payload 决定是否带回原文）
+  cmd: curl -s --json '{"vector":[...],"limit":5,"with_payload":true}' http://localhost:6333/collections/kb_chunks/points/search
+- hint: 查看集合状态与点数（确认数据灌进去了、索引建好了）
+  cmd: curl -s http://localhost:6333/collections/kb_chunks | jq '.result.status, .result.points_count, .result.indexed_vectors_count'

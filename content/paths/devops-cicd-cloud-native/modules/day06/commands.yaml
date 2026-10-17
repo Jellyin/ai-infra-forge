@@ -1,0 +1,10 @@
+- hint: 取出基础镜像的 manifest digest（用于固定到 @sha256:）
+  cmd: docker buildx imagetools inspect golang:1.23-bookworm --format '{{json .Manifest.Digest}}'
+- hint: 用 BuildKit secret 构建，密钥只在 RUN 期间挂载、不进 history
+  cmd: docker buildx build --secret id=npm_token,src=/tmp/npm_token -t app:test .
+- hint: 从镜像历史里查找是否泄漏了构建期密钥
+  cmd: docker history --no-trunc app:test | grep -i token
+- hint: 用 rootless BuildKit 构建并直接推送（无需 privileged）
+  cmd: buildctl-daemonless.sh build --frontend dockerfile.v0 --local context=. --output type=image,name=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA,push=true
+- hint: 用 Buildah 无 daemon 构建并输出镜像 digest
+  cmd: buildah build --layers -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA . && buildah push --digestfile digest $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA

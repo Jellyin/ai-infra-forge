@@ -1,0 +1,10 @@
+- hint: 为每个环境建独立命名空间（最小的隔离单元）
+  cmd: kubectl create namespace app-prod
+- hint: 列出命名空间及其标签，核对环境矩阵
+  cmd: kubectl get namespaces --show-labels
+- hint: 应用一条「默认拒绝入站」的 NetworkPolicy 做网络隔离
+  cmd: kubectl apply -f deny-all-networkpolicy.yaml
+- hint: 确认当前 kubectl 指向哪个集群/上下文（避免部署到错误环境）
+  cmd: kubectl config current-context
+- hint: 查看当前分支最近一次流水线及其部署环境（glab 子命令随版本演进，以官方文档为准）
+  cmd: glab ci status

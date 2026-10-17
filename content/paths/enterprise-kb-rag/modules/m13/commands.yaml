@@ -1,0 +1,10 @@
+- hint: 按频次抽候选问题（高频代表主干场景，别只抽热问）
+  cmd: jq -r '.query' logs/qa-2026Q3.jsonl | sort | uniq -c | sort -rn | head -300
+- hint: 按意图分层采样，保证四类问题都有
+  cmd: jq -r 'select(.intent=="howto") | .query' logs/qa-2026Q3.jsonl | shuf -n 40
+- hint: 计算两名标注者的一致性（Cohen's kappa）
+  cmd: python -m eval.agreement --a anno_alice.jsonl --b anno_bob.jsonl --field verdict --metric kappa
+- hint: 校验黄金集 schema（缺 gold_doc_ids / type 会当场报错）
+  cmd: python -m eval.lint --evalset evalset/gold-v1.jsonl --schema schemas/evalset.json
+- hint: 防污染断言——评测集问题是否泄漏进提示词或语料索引
+  cmd: grep -Ff <(jq -r '.question' evalset/gold-v1.jsonl) -r prompts/ corpus-index/ && echo "LEAK FOUND" || echo "OK"

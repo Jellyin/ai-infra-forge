@@ -1,0 +1,10 @@
+- hint: 跑一次基线评测，输出 recall@k 与 MRR（结果可复现是硬要求）
+  cmd: python eval_recall.py --golden golden.jsonl --k 5 --collection kb_chunks --out baseline.json
+- hint: 看集合里到底有多少块（确认数据灌全，否则指标没意义）
+  cmd: curl -s http://localhost:6333/collections/kb_chunks | jq '.result.points_count'
+- hint: 对向量库发一次检索，复现某条失败 query 的 top-k 与分数
+  cmd: curl -s --json '{"vector":[...],"limit":5,"with_payload":true}' http://localhost:6333/collections/kb_chunks/points/search | jq '.result[] | {id, score, payload}'
+- hint: 判断「语料缺失」还是「检索失败」——拿正确答案的关键串搜原始语料
+  cmd: grep -rl "E-4021" /path/to/corpus | head
+- hint: 汇总失败清单并按归因计数（语料缺失 / 检索失败 / 切分问题）
+  cmd: jq -r 'select(.attribution!=null) | .attribution' failures.jsonl | sort | uniq -c | sort -rn

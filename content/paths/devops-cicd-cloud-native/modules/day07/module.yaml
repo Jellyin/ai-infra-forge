@@ -1,0 +1,22 @@
+id: day07
+title: 多架构镜像：amd64 / arm64 双轨构建与发布
+goal: 一套流水线同时产出两种架构，并让下游自动选对
+order: 7
+track: 轨道 2 · 制品与供应链
+read: 22
+lab: 40
+concepts:
+  - 为什么必须多架构：本地/CI 与生产节点架构不一致（Apple Silicon、Graviton、Ampere）
+  - 两条路线：QEMU 模拟构建 vs 原生 arm64 runner（速度与成本的真实差距）
+  - buildx / Buildah 的多平台构建：--platform 与 manifest list
+  - OCI index：一个 tag 背后是多个架构，digest 指向 index 而非单架构镜像
+  - 多架构的缓存与并行：按平台分键、原生 runner 上的并行扇出
+  - 双架构的测试与验证：不能只测 amd64
+  - 多架构制品的晋升与回滚：引用 index digest
+checklist:
+  - 能写出 buildx 双平台构建并推送的完整命令
+  - 能解释 manifest list 与「tag 指向多架构」的关系
+  - 能说出 QEMU 模拟构建的性能代价与适用边界
+  - 能为 arm64 设计 runner 方案（自建/托管/交叉编译的取舍）
+  - 能说明多架构制品为什么必须用 index digest 而不是单架构 digest
+  - 能列出双架构下必须补做的测试项

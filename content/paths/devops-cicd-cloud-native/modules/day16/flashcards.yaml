@@ -1,0 +1,24 @@
+- id: day16-c1
+  front: 训练流水线与 Web 流水线的本质差异，用五点概括？
+  back: '① 作业长（小时~天）——不能用短超时判失败；② GPU 稀缺不可超卖——提交≠开始，会排队；③ 抢占/驱逐是常态——中断≠失败，需断点续训；④ 输入除代码还有 TB 级、外部版本化的数据集；⑤ 产物是权重+指标+超参且非完全确定——退出码 0 不等于可交付。'
+- id: day16-c2
+  front: 为什么训练环境要构建进镜像并钉死 digest，而不是在流水线里装 conda/pip？
+  back: '因为 pip/conda 的解析结果随时间变化（不可复现）、GPU 节点常无外网、装包失败会混进「训练失败」。镜像 digest 是精确坐标，environment.yml 只是意图。同时镜像架构与 CUDA/驱动必须与目标节点匹配，否则调度成功但容器起不来。'
+- id: day16-c3
+  front: 可复现性三要素是什么？各自怎么版本化？
+  back: '代码（Git commit SHA，或把 SHA 写进镜像 label）、数据（数据集 manifest：路径+内容哈希+条数，或 DVC/lakeFS/Delta 时间旅行）、超参（配置文件进 Git / 全量落进实验追踪）。三者之外还要锁环境（镜像 digest）与随机种子（含数据加载顺序）。'
+- id: day16-c4
+  front: checkpoint 至少要存什么才能精确续训？只存权重会怎样？
+  back: '需存模型权重、优化器状态、LR 调度器状态与 global step/epoch、各 RNG 状态（含 dataloader 采样器）、以及训练配置与代码 SHA。只存权重会导致续训后 loss 跳变（优化器动量丢失）且数据顺序改变。'
+- id: day16-c5
+  front: 训练被抢占后，K8s Job 控制器做了什么、没做什么？
+  back: '做了：按 restartPolicy/backoffLimit 重建 Pod（原样重跑容器）。没做：它不懂 checkpoint，不会帮你续训。续训必须写进训练脚本——收到 SIGTERM 时 flush checkpoint，启动时检测到 checkpoint 就 resume。否则抢占一次=白跑。'
+- id: day16-c6
+  front: 数据集版本与缓存如何约束流水线？
+  back: '数据集要当不可变制品：产出 manifest（对象 key+哈希+条数），流水线引用 manifest 哈希而非可变的 latest 前缀。缓存 key 必须含数据集哈希，版本一变即失效，否则会静默训练在旧数据上。数据集准备步骤本身也要可缓存、可跳过。'
+- id: day16-c7
+  front: 「跑成功了」和「结果可复现」差在哪？
+  back: '跑成功=进程退出码 0、指标看起来正常；可复现=给定代码/数据/超参三要素，能在同一容差内重现指标。后者还需要固定镜像、固定种子、必要时开确定性算子。最常见的不可复现根因：数据被就地覆盖、用浮动 tag 镜像、种子没固定、算子非确定性实现。'
+- id: day16-c8
+  front: 训练 Job 长时间 Pending，先查什么？这属于「失败」吗？
+  back: '不属于失败，属于排队——GPU 是扩展资源、不可超卖，提交≠开始。查 kubectl describe pod 的 Events 区分两种情况：无空闲 GPU/配额已满（等），或配置错误如 nodeSelector/taint 不匹配、镜像拉不下来、PVC 未绑定（改）。不要用会把 Pending 判死的短超时。'

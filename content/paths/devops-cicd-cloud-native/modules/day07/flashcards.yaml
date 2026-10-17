@@ -1,0 +1,24 @@
+- id: day07-c1
+  front: 为什么现在「只产 amd64 镜像」的流水线会出真实故障？
+  back: 三类同时压来：① 开发者用 Apple Silicon（arm64）本地拉 amd64 镜像要 QEMU 模拟；② 生产用 Graviton/Ampere（arm64）节点，amd64 镜像直接起不来或因架构不匹配被挡；③ 更致命的是 CI 测的是 amd64、生产跑的是 arm64，测的和上的不是同一个二进制——与「假绿灯」同源。
+- id: day07-c2
+  front: QEMU 模拟构建 vs 原生 arm64 runner，速度与成本的真实差距在哪？
+  back: QEMU 用 binfmt_misc 在 amd64 上模拟 arm64 指令，编译型语言常见慢 5–20×；成本上省 runner 但费 wall-clock。原生 arm64 runner 原生速度但要占机器/有单价，自建 Graviton/Ampere 通常更划算。适用边界：小镜像/解释型/兜底用 QEMU，编译密集/大镜像用原生。
+- id: day07-c3
+  front: 「QEMU 太慢」最常见的根因是什么？怎么绕开？
+  back: 根因是 Dockerfile 没做交叉编译，让 QEMU 参与了编译。修法：构建阶段用 FROM --platform=$BUILDPLATFORM 跑在原生平台上，声明 ARG TARGETOS TARGETARCH，交叉编译（如 GOARCH=$TARGETARCH），QEMU 只在运行阶段装配镜像层，不参与重编译。
+- id: day07-c4
+  front: manifest list / OCI index 是什么？一个 tag 指向多架构是怎么实现的？
+  back: index（manifest list）是一个「清单的清单」，一个 tag 对应它；里面为每个平台列出一条子 manifest 及其独立 digest。docker pull 时客户端读 index，按自身架构挑对应 manifest 再拉层。所以一个 tag 后面其实是多个镜像，各自有 digest，index 本身也有顶层 digest。
+- id: day07-c5
+  front: 多架构制品晋升与回滚，为什么必须用 index digest 而不是单架构 digest？
+  back: '单架构 digest 只代表 amd64 或 arm64 那一份；用它做发布，arm64 节点会拉到 amd64 那份或架构不匹配失败，造成「一台上、一台不上」。index digest 是顶层，一次覆盖两个架构，回滚时两个架构一起切回——这是多架构发布相比维护两套 tag 的核心价值。'
+- id: day07-c6
+  front: --load 为什么不能加载多平台镜像？
+  back: 因为多平台构建产出的是 manifest list / OCI index，本地 docker 镜像存储无法表示「一个 tag 对应多架构」，docker exporter 会直接报不支持导出 manifest list。多平台必须 --push 推到 registry，或 --output type=oci 导出 OCI 布局。
+- id: day07-c7
+  front: 多架构的缓存为什么要按平台分键？
+  back: 不同架构的基础层与编译产物不同，缓存不能共用，否则会互相污染或命中错误层。做法是把平台写进缓存 ref（如 ref=...:$CI_COMMIT_REF_SLUG-$ARCH，mode=max），在每架构一个 job 分开构建时尤其必要。
+- id: day07-c8
+  front: 双架构发布，为什么不能只测 amd64？必须补哪些测试？
+  back: '只测 amd64 = 双架构只验证了一半，arm64 那份从未被真正执行。必须补：① 架构断言（docker run --platform linux/arm64 img uname -m 得 aarch64）；② 在 arm64 上真跑服务的冒烟测试（本地扩展/.so/node-gyp/AVX 类代码最易翻车）；③ index 完整性断言（两个平台都在）；④ 晋升 digest 与实际拉取 digest 一致。'

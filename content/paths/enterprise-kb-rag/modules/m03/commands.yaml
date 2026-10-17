@@ -1,0 +1,10 @@
+- hint: 用「规范文本的内容哈希」做文档指纹（归并空白后 sha256）
+  cmd: "python3 -c 'import hashlib,sys;print(\"sha256:\"+hashlib.sha256(\"\".join(open(sys.argv[1]).read().split()).encode()).hexdigest())' doc.md"
+- hint: 用 git commit 水位线做增量（只取上次 SHA 之后的变更）
+  cmd: 'git diff --name-status <last_indexed_sha> HEAD -- docs/'
+- hint: 按 doc_id 删除该文档全部块（删除传播，Qdrant filter delete）
+  cmd: 'curl -s -X POST "http://localhost:6333/collections/kb_docs/points/delete?wait=true" -H "Content-Type: application/json" -d "{\"filter\":{\"must\":[{\"key\":\"doc_id\",\"match\":{\"value\":\"kb-0042\"}}]}}"'
+- hint: 幂等写入（确定性主键 + ON CONFLICT upsert，pgvector）
+  cmd: "psql \"$PGURL\" -c \"INSERT INTO chunks (chunk_uid, doc_id, content) VALUES ('u1','kb-0042','...') ON CONFLICT (chunk_uid) DO UPDATE SET content = EXCLUDED.content;\""
+- hint: 清单比对找出已删除文档（源清单 vs 登记表 ID）
+  cmd: 'comm -23 <(sort registry_ids.txt) <(sort current_ids.txt)'

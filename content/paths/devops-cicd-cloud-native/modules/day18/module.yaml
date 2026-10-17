@@ -1,0 +1,20 @@
+id: day18
+title: 推理服务交付与发布
+goal: 把模型交付成线上服务，并按指标控制发布
+order: 18
+track: 轨道 4 · AI 训练与推理交付
+read: 22
+lab: 35
+concepts:
+  - 推理服务形态：vLLM / KServe 的职责边界
+  - GPU 调度、配额与多租户隔离
+  - 弹性：HPA/KEDA 与推理特有指标（队列、TTFT/TPOT）
+  - 金丝雀与流量切换：模型版本切换的灰度做法
+  - 多架构推理：arm64（Graviton/Ampere）与 GPU 节点的选型与镜像架构匹配
+  - 与轨道 3 打通：ArgoCD + Rollouts 发布推理服务
+checklist:
+  - 能画出模型从制品到线上服务的完整路径
+  - 能为推理服务设计一套弹性策略
+  - 能解释为什么 CPU 利用率不是推理的正确伸缩指标
+  - 能用 Rollouts 做一次模型版本灰度
+  - 能给出推理服务的成本优化清单

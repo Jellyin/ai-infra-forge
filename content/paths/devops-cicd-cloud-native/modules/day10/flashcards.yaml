@@ -1,0 +1,24 @@
+- id: day10-c1
+  front: masked / protected / environment 作用域三者各挡什么，边界在哪？
+  back: 'masked 让变量的值在 job 日志里显示为 [MASKED]，只挡原样出现——编码/切片/拼进 URL 就绕过，某些字符或多行值本就无法掩码；protected 让变量只注入受保护分支/tag 的 job；environment 作用域把变量限定到指定 environment 的 job。要点：masked 是日志护栏不是安全边界，真正的边界是 protected + environment + 最小权限的短期凭证。'
+- id: day10-c2
+  front: CI 变量泄露的常见路径有哪些？
+  back: '日志（echo/set -x/把密钥塞进 URL，masked 只挡原样）；artifact 与 cache（.env/.npmrc/kubeconfig 被长期保存可下载）；fork PR（尤其 pull_request_target 带着基仓库 secrets 又 checkout PR 代码）；被改动的 job（能改 CI 配置的人可加一步外传）；第三方镜像/service 能读环境变量；调试开关（CI_DEBUG_TRACE/step debug）把环境变量打出来。'
+- id: day10-c3
+  front: 为什么 pull_request_target 是一个陷阱？
+  back: 'GitHub 默认不给 fork 触发的 pull_request 传 secrets（好设计）；但 pull_request_target 会带着基仓库的 secrets 运行。若它同时又 checkout 了 PR 的 head 代码，攻击者改一行构建脚本就能拿到并外传这些 secrets。安全用法是不 checkout 未信任的 head 代码，或按需改回 pull_request。'
+- id: day10-c4
+  front: OIDC 免密上云的信任模型，三个必须校验的字段是什么？
+  back: 'issuer（令牌来自哪个 CI IdP）、audience（令牌发给哪个云）、subject 条件（限制哪个分支/环境的工作流能换凭证，如 repo:org/repo:ref:refs/heads/main）。云侧信任策略就是在校验这三点，把「信任一个密钥」换成「信任一个身份 + 一组条件」。CI 侧需 id-token: write 权限并取 OIDC 令牌。'
+- id: day10-c5
+  front: AWS / GCP / Azure 的 OIDC 信任配置要点各是什么？
+  back: 'AWS：OIDC provider 的 issuer=token.actions.githubusercontent.com，aud=sts.amazonaws.com，Condition 里用条件键 <provider>:sub 收窄分支，动作 sts:AssumeRoleWithWebIdentity。GCP：Workload Identity Pool + OIDC provider，属性映射 + attribute condition 限制 assertion.sub，池内 principalSet 冒充服务账号。Azure：app registration 的 federated identity credential，issuer + subject + aud=api://AzureADTokenExchange。'
+- id: day10-c6
+  front: Vault 的动态凭证相比静态密钥，收益在哪？
+  back: 'Vault 开 JWT/OIDC auth method 接受 CI 的 OIDC 令牌，role 上用 bound_claims 绑 sub/aud（与云的 subject 条件同一思路）；database/AWS/PKI 等 secrets engine 按需签发带 TTL 的动态凭证，用完随 lease 过期自动失效。收益是不再有「一个密码用两年」，泄露一个动态凭证的影响面被 TTL 和权限天然限制。'
+- id: day10-c7
+  front: 「一个 job 一个身份」为什么是审计的前提？
+  back: '共用万能身份时，出事无法回答「是哪个 job、哪次运行动的手」。每个 job 用恰好够用、独立的身份（build/test/deploy/scan 各一），subject 条件收窄到需要的分支/环境、权限按 job 最小化，审计才有意义。'
+- id: day10-c8
+  front: 发现密钥泄露后的正确处置顺序是什么？
+  back: '先轮换（到 provider 侧作废旧凭证签发新的），而不是先删代码——删掉不等于收回，旧值已泄露。再审计（云审计日志/GitLab audit events，还原谁在何时做了什么）、评估影响面（按身份理论能触达的全部）、清场（作废会话、查持久化）、收口（缩短 TTL、收紧 subject、把长期密钥换成 OIDC/Vault）、按需通报。'

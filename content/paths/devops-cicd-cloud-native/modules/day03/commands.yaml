@@ -1,0 +1,10 @@
+- hint: 创建一个专用 builder，避免与默认 builder 的本地缓存互相干扰
+  cmd: docker buildx create --use --name cachelab
+- hint: 用本地目录做 BuildKit 层缓存后端（仅适合单台持久 runner）
+  cmd: docker buildx build --load -t app:1 --cache-from type=local,src=/tmp/bkcache --cache-to type=local,dest=/tmp/bkcache,mode=max .
+- hint: 把层缓存推到 registry，供多个 runner 共享
+  cmd: docker buildx build --push -t registry.example.com/app:$CI_COMMIT_SHA --cache-from type=registry,ref=registry.example.com/app:buildcache --cache-to type=registry,ref=registry.example.com/app:buildcache,mode=max .
+- hint: 检查多平台镜像 manifest，确认每个平台的摘要确实不同
+  cmd: docker buildx imagetools inspect registry.example.com/app:1.2.3
+- hint: 让 amd64 主机能执行 arm64 构建（本地交叉构建的前提）
+  cmd: docker run --privileged --rm tonistiigi/binfmt --install all

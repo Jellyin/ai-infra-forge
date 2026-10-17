@@ -1,0 +1,10 @@
+- hint: 校验 .gitlab-ci.yml 语法（官方 CLI，只查语法不查语义）
+  cmd: glab ci lint .gitlab-ci.yml
+- hint: 本地按依赖链只跑指定 job 及其上游，验证 needs 是否真的生效
+  cmd: npx gitlab-ci-local --needs unit
+- hint: 列出全部 job（含 parallel:matrix 展开的实例），用来估算并发代价
+  cmd: npx gitlab-ci-local --list
+- hint: 统计测试用例数，防止「零用例通过」的假绿灯
+  cmd: npx jest --listTests | wc -l
+- hint: 乱序并重复执行，暴露测试间共享状态导致的 flake
+  cmd: go test ./... -count=5 -shuffle=on

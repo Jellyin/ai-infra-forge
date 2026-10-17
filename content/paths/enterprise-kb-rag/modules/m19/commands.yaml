@@ -1,0 +1,10 @@
+- hint: 取模型镜像的 index digest（多架构回滚/晋升引用这个，不引用单架构 digest）
+  cmd: docker buildx imagetools inspect "$REG/kb-infer:1.0.0" --format '{{json .Manifest.Digest}}'
+- hint: 记录提示词版本（提示词是制品，不是配置）
+  cmd: git -C ./prompts rev-parse HEAD
+- hint: 导出向量库快照并就地为索引打一个可寻址的还原点（Qdrant 示意，字段随版本演进以官方文档为准）
+  cmd: curl -s -X POST "$QDRANT/collections/kb/snapshots" | jq -r '.result.name'
+- hint: 应用回滚并计时（回滚对象=应用/编排）
+  cmd: time kubectl rollout undo deployment/kb-api && kubectl rollout status deployment/kb-api
+- hint: 索引回滚的快路径——切换别名指回旧快照（原子切换，分钟级）
+  cmd: kubectl patch configmap kb-index-alias --type merge -p '{"data":{"alias":"snapshot-a"}}'

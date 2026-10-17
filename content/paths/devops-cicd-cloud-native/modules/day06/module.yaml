@@ -1,0 +1,20 @@
+id: day06
+title: 镜像构建的现代方案
+goal: 选对构建器，并让构建过程可复现、可缓存、不泄密
+order: 6
+track: 轨道 2 · 制品与供应链
+read: 22
+lab: 35
+concepts:
+  - 四种方案：BuildKit rootless / Buildah / DinD / socket 绑定
+  - socket 绑定为什么危险（等价于给 CI 宿主机 root）
+  - 多阶段构建与 distroless/非 root 运行时
+  - 构建期密钥：BuildKit secrets 而非 --build-arg
+  - 可复现构建：基础镜像固定 digest、时间戳与排序
+  - 构建产物要能被多架构复用（为 Day 7 铺路）
+checklist:
+  - 能为团队选出构建方案并说明理由
+  - 能把一个 --build-arg 传密钥的构建改成 BuildKit secret
+  - 能把基础镜像固定到 digest 并解释收益
+  - 能配置多阶段构建产出小体积非 root 镜像
+  - 能解释「可复现构建」在本项目的具体含义

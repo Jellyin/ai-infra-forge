@@ -8,11 +8,31 @@ import { resolve } from "node:path";
 const aiforgeContent = contentPlugin(resolve(__dirname, "../../content")) as unknown as Plugin;
 
 export default defineConfig({
+  /* GitHub Pages 是项目站，站点挂在 /ai-infra-forge/ 子路径下；不切 base 的话
+     产出的 index.html 会引用 /assets/*，在 Pages 上 404 → 整页白屏。
+     本地 dev、Docker/nginx（根路径部署）仍用 "/"。 */
+  base: process.env.GITHUB_ACTIONS ? "/ai-infra-forge/" : "/",
   plugins: [
     react(),
     aiforgeContent,
   ],
   resolve: {
     alias: { "@": resolve(__dirname, "src") },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        /* 分包：react 运行时与内容数据各自成块。内容（30 天教程/实验）是体积主项，
+           单独成块后更新内容不会让用户重下含 react 的 bundle，缓存命中率更高。 */
+        manualChunks(id) {
+          /* 正文模块（docs）必须排除在外，交给 Rollup 按动态 import 自动切分；
+             若也归到 "content"，会把它和元数据合并回同一块，懒加载就白做了。 */
+          if (id.includes("virtual:aiforge-content/docs")) return undefined;
+          if (id.includes("virtual:aiforge-content")) return "content";
+          if (id.includes("node_modules/react") || id.includes("node_modules/scheduler")) return "vendor";
+          return undefined;
+        },
+      },
+    },
   },
 });

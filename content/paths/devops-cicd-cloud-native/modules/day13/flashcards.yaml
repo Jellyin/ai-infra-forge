@@ -1,0 +1,24 @@
+- id: day13-c1
+  front: App-of-Apps 与 ApplicationSet 的适用边界是什么？
+  back: 'App-of-Apps：一个父 Application 指向一个目录，目录里是子 Application，适合少量应用、想一眼看全；局限是父子强耦合、扩环境仍要复制。ApplicationSet：controller 用 generator 程序化生成 Application，适合多环境/多集群、目录即矩阵；代价是要理解 generator 与模板。“应用数 × 环境数”超过能手数清时，就该上 ApplicationSet。'
+- id: day13-c2
+  front: ApplicationSet 的 git generator「目录式生成」是什么意思？
+  back: '用 directories 或 files 让 generator 扫描仓库目录，把目录结构当成环境矩阵：目录一加环境就出现，目录一删环境就回收。模板里用 .path.path / .path.segments 取路径片段拼出 Application 名字与目标命名空间。语法随版本演进，以官方文档为准。'
+- id: day13-c3
+  front: argocd cluster add 在目标集群里做了什么？为什么权限要收紧？
+  back: '它用 kubeconfig 里的 context 注册外部集群，并在目标集群创建 argocd-manager 的 ServiceAccount 与绑定——ArgoCD 以它的身份在那台集群操作。因此该 SA 的权限就是 ArgoCD 在该集群的边界，越权会被放大，必须收紧。'
+- id: day13-c4
+  front: AppProject 里 sourceRepos / destinations 与 clusterResourceWhitelist 分别起什么作用？
+  back: 'sourceRepos/destinations 限定「这个项目能用哪些仓库、部署到哪些集群与命名空间」，是最有价值的两道墙；clusterResourceWhitelist 默认空，意味着集群级资源（CRD、ClusterRole 等）必须显式放行，是防越权的默认值。'
+- id: day13-c5
+  front: sync-wave 注解的顺序规则是什么？
+  back: 'argocd.argoproj.io/sync-wave 的数字小者先应用，默认 0，可为负。它用于给有依赖关系的资源排序（如先 Namespace 后 Deployment）。注意 wave 保证的是“大致分阶段顺序”，一次性任务应改用 hook。'
+- id: day13-c6
+  front: 数据库迁移该用 sync-wave 还是 hook？为什么？
+  back: '用 hook，具体是 PreSync（同步前执行）。理由：① 迁移是一次性任务，不该放进 Deployment 的 initContainer（扩容会重跑）；② hook 失败会阻断整个 sync，天然保证“迁移没过，应用不上”；③ 用 hook-delete-policy 清理 Job，迁移脚本必须幂等。hook 只解决顺序，可回滚仍靠 expand/contract。'
+- id: day13-c7
+  front: Sealed Secrets / External Secrets / Vault 三种密钥方案怎么选？
+  back: '取舍四问：真源在哪、是否多集群、要不要自动轮换、能否接受密文进 Git。真源已在云 Secret Manager/Vault 且多集群 → External Secrets（拉取、可轮换）；只要单集群、想全 Git 化 → Sealed Secrets（密文可入 Git，但与集群绑定）；要动态短期凭证 → Vault 集成。'
+- id: day13-c8
+  front: 「谁在什么时候同步了什么」由哪两层记录共同回答？
+  back: '① Git 历史：谁改了期望状态（commit author、时间、diff）；② ArgoCD 记录：Application 的 status.operationState 记谁触发同步/回滚、用了哪个 revision、何时、结果如何，API server 另有审计日志。Git 记“期望为什么变”，ArgoCD 记“同步是谁触发的”，缺一不可。'

@@ -1,0 +1,10 @@
+- hint: 校验组件/调用方 .gitlab-ci.yml 语法（官方 CLI，只查语法不查语义）
+  cmd: glab ci lint .gitlab-ci.yml
+- hint: 本地渲染并列出 include/component 展开后的全部 job
+  cmd: npx gitlab-ci-local --list
+- hint: 本地只跑某个 job，验证 inputs 是否传进了组件
+  cmd: npx gitlab-ci-local build-docker
+- hint: 给组件仓库打版本 tag（catalog 按 tag 解析版本，如 1.0.0、2.0.0）
+  cmd: git tag 1.0.0 && git push origin 1.0.0
+- hint: 列出组件仓库已有版本，规划 1.1.0 / 2.0.0 的升级与弃用
+  cmd: git tag -l '1.*.*'

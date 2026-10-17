@@ -1,0 +1,20 @@
+id: day12
+title: GitOps 与 ArgoCD 架构
+goal: 把部署从「谁在本地 kubectl apply」变成「Git 是唯一事实源」
+order: 12
+track: 轨道 3 · CD：GitOps 与 ArgoCD
+read: 22
+lab: 35
+concepts:
+  - 为什么弃用 CI 里直接 kubectl apply
+  - GitOps 四条原则与它解决的边界问题
+  - ArgoCD 组件：API Server / Repo Server / Application Controller / Redis / Dex
+  - Application CR 与 sync policy（自动/手动、prune、selfHeal）
+  - 漂移检测与自愈：什么时候该自愈，什么时候该报警
+  - CI 与 CD 的职责边界：CI 出制品与提交声明，CD 从 Git 同步
+checklist:
+  - 能画出一条从提交到集群生效的 GitOps 链路
+  - 能说出 ArgoCD 各组件职责与常见故障点
+  - 能配置 sync policy 并解释 prune 与 selfHeal 的取舍
+  - 能解释漂移产生的典型原因与检测方式
+  - 能说明 CI 与 ArgoCD 的职责边界

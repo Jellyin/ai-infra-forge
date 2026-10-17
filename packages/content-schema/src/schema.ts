@@ -37,6 +37,8 @@ export const ModuleSchema = z.object({
   title: z.string().min(1),
   goal: z.string().optional(),
   order: z.number().int().positive(),
+  /** 所属轨道（可选）：多轨道路径用它分组展示，学习者可自行挑选先学哪条 */
+  track: z.string().optional(),
   read: z.number().nonnegative().optional(),  // 建议阅读分钟
   lab: z.number().nonnegative().optional(),   // 建议动手分钟
   concepts: z.array(z.string()).default([]),
@@ -52,19 +54,38 @@ export const PathSchema = z.object({
   description: z.string().optional(),
   audience: z.string().optional(),
   version: z.string().default("0.1.0"),
+  /** 学习单元的称量词：岗位类路径用「Day」，项目实践类可用「里程碑」「阶段」等。
+   *  界面上的「Day 3 · …」会跟着它变，避免项目类路径被叫作「Day」。 */
+  unit: z.string().default("Day"),
 });
 export type Path = z.infer<typeof PathSchema>;
 
-/* ---------- 模块完整内容（schema 聚合后） ---------- */
-export interface ModuleContent extends Module {
-  guideMd: string;          // 教程正文 markdown
-  labMd: string;            // 实验正文 markdown
+/* ---------- 模块元数据（运行时实际需要的最小集合） ----------
+ * guideMd/labMd 是体积主项（30 天正文 ≈ 全部内容的九成），拆到独立模块按需加载，
+ * 首屏就不必为没打开的天数付出解析成本。 */
+export interface ModuleMeta extends Module {
+  hasGuide: boolean;        // 构建期探测（替代运行时判断 guideMd 是否为空）
+  hasLab: boolean;
   flashcards: Flashcard[];
   commands: Command[];
   quiz: QuizItem[];
 }
 
-export interface PathContent extends Path {
+export interface PathMeta extends Path {
+  modules: ModuleMeta[];
+}
+
+/** 正文：按 `${pathId}:${moduleId}` 索引，由虚拟模块 virtual:aiforge-content/docs 提供 */
+export interface ModuleDocs { guideMd: string; labMd: string }
+export type DocsMap = Record<string, ModuleDocs>;
+
+/* ---------- 模块完整内容（含正文；校验脚本与工具链用） ---------- */
+export interface ModuleContent extends ModuleMeta {
+  guideMd: string;          // 教程正文 markdown
+  labMd: string;            // 实验正文 markdown
+}
+
+export interface PathContent extends PathMeta {
   modules: ModuleContent[];
 }
 

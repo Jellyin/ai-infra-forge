@@ -1,0 +1,10 @@
+- hint: 拉取最近 100 个 job 的排队/执行/是否重试明细（GitLab API）
+  cmd: "glab api \"projects/$PROJECT_ID/jobs?per_page=100\" | jq -r '.[] | [.name,.stage,.status,.queued_duration,.duration,.retried] | @tsv'"
+- hint: 汇总排队总时长与执行总时长，判断瓶颈在哪一侧
+  cmd: "glab api \"projects/$PROJECT_ID/jobs?per_page=100\" | jq '{\"排队总秒\":(map(.queued_duration // 0)|add),\"执行总秒\":(map(.duration // 0)|add)}'"
+- hint: 按 stage 聚合执行与排队时长，找出最占时间的阶段
+  cmd: "glab api \"projects/$PROJECT_ID/jobs?per_page=100\" | jq -r 'group_by(.stage)[] | [.[0].stage,(map(.duration // 0)|add),(map(.queued_duration // 0)|add)] | @tsv' | sort -k2 -nr"
+- hint: 查看 GitLab Runner 暴露的 Prometheus 指标（含当前运行 job 数）
+  cmd: "curl -s http://localhost:9252/metrics | grep '^gitlab_runner'"
+- hint: 列出项目的定时流水线（schedules）
+  cmd: "glab schedule list"

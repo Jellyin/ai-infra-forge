@@ -1,0 +1,11 @@
+id: devops-cicd-cloud-native
+title: DevOps 云原生 CI/CD 全流程 · 21 天掌握计划
+subtitle: GitLab CI 为主线（GitHub Actions 对照）· 从一次提交到生产 · 含 AI 训练/推理交付
+audience: 有 CI/CD 基础的 DevOps / 平台 / SRE 工程师
+description: >-
+  五条轨道：① 流水线主干与 CI 内嵌能力 ② 制品与供应链 ③ CD：GitOps 与 ArgoCD
+  ④ AI 训练与推理交付 ⑤ 平台化与生产就绪。轨道可分别学，也可按 order 顺序贯通成一条
+  端到端流程：提交 → 检查/测试 → 制品与签名 → 供应链门禁 → GitOps 交付 → 渐进式发布
+  → 观测与回滚。聚焦「看起来能跑」与「生产可用」之间的差距：制品不可变与晋升、
+  密钥与身份、签名与准入、漂移与自愈、发布门禁与自动回滚。
+version: 0.1.0

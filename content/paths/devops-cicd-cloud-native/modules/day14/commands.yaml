@@ -1,0 +1,8 @@
+- hint: 实时观察 Rollout 的推进、权重与 analysis 结果
+  cmd: kubectl argo rollouts get rollout api -n demo --watch
+- hint: 给 Rollout 换镜像并触发一次金丝雀发布
+  cmd: kubectl argo rollouts set image api api=registry.example.com/api:1.5.0 -n demo
+- hint: 放行一个 pause 步骤（继续推进）
+  cmd: kubectl argo rollouts promote api -n demo
+- hint: 中止发布并回滚到稳定版本
+  cmd: kubectl argo rollouts abort api -n demo

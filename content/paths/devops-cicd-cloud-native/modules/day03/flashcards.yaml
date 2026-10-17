@@ -1,0 +1,24 @@
+- id: day03-c1
+  front: 怎么一句话判断某个东西该放 cache 还是 artifacts？
+  back: 没有它构建就错的东西是 artifacts，不是 cache。cache 跨 pipeline 滚动覆盖、可以缺失（缺了只是慢）；artifacts 属于本次 pipeline、按 expire_in 清理、下游拿不到就是错。另有一条纪律：空缓存必须是一次合法的执行路径。
+- id: day03-c2
+  front: cache key 为什么必须由内容决定？
+  back: '常量 key（如 key 写死为 deps）永不失效，依赖变更后仍命中旧内容——这就是缓存假命中。key 至少应含锁文件哈希；再加分支前缀平衡命中率，并把工具链版本一起加进去，以覆盖原生模块的差异。'
+- id: day03-c3
+  front: cache:key:files 有哪些注意点？
+  back: '文件路径条数有上限：默认 2 条；GitLab 19.5 起可提升到 10 条（需开启 increase_ci_cache_key_files_limit 特性开关，默认关闭）。超过了要自己算哈希写进变量。纯内容 key 会让每个分支第一次都 miss，所以常见做法是 prefix 加分支名、files 加锁文件。'
+- id: day03-c4
+  front: BuildKit 的 --cache-from 与 GitLab 的 cache:key 有什么本质区别？
+  back: '--cache-from 只是导入候选，BuildKit 靠内容摘要比对决定是否命中——ref 相同也不会复用过期的层。而 GitLab 的 cache:key 是按键取值，键不包含内容就会拿到过期内容。两套机制的安全性不能混为一谈。'
+- id: day03-c5
+  front: 多架构缓存应该怎么分键？
+  back: 按目标平台分键，例如镜像构建用带平台后缀的独立 cache ref。别用 CI_RUNNER_EXECUTABLE_ARCH——交叉编译时 runner 架构恒为 amd64，两个平台会落到同一 key 上互相污染。必须用 buildx 的 TARGETARCH / TARGETPLATFORM 或自定义变量。
+- id: day03-c6
+  front: 多架构缓存污染的症状是什么？
+  back: 不是构建报错，而是推迟到运行期才暴露——链接失败或运行时段错误。因为 amd64 的层被 arm64 复用，这些层在构建期看起来完全合法。
+- id: day03-c7
+  front: 缓存投毒的三条现实路径是什么？
+  back: 分布式缓存允许任意 pipeline 写同一 key，于是恶意分支写、主干读；构建产物作为缓存被下游直接执行（编译产物、二进制、带 postinstall 的 node_modules）；拉取不受信任的远程 cache image 并复用其层。
+- id: day03-c8
+  front: 什么情况下必须主动禁用缓存？
+  back: 对外发布的可复现构建验证；安全扫描基线（要扫真实依赖而非缓存里的那份）；多 runner 并发写同一 key 互相覆盖（要么分键，要么串行）；依赖源被投毒后的紧急处置（用 --no-cache / --pull 重建）。

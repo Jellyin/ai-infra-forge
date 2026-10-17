@@ -1,0 +1,12 @@
+- id: day12-q1
+  q: 「拉」模型（pull）相比「推」模型（push）在凭证安全上好在哪？
+  a: '推模型里，外部系统（CI）必须持有操作目标集群的长期凭证，凭证暴露面大，任何能改流水线的人都能操作 prod。拉模型里，集群内的 agent 主动拉取声明，集群凭证不出集群、CI 不再需要 prod 钥匙。攻击面从「CI + 长期凭证」缩小为「集群内的 agent 身份」。'
+- id: day12-q2
+  q: 打开 prune 和 selfHeal 各有什么风险？怎么降风险？
+  a: 'prune 的风险是渲染出错导致清单为空/缺失时误删资源，应先在无关环境验证、配合 PruneLast 等选项；selfHeal 的风险是与你正在做的应急热修或其他控制器（HPA/Operator）反复打架。降风险：对第二权威字段用 ignoreDifferences，或让该环境只报警不自愈，并遵循「先手动后自动」的迁移路径。'
+- id: day12-q3
+  q: 某个 Deployment 的 replicas 由 HPA 管理，ArgoCD 一直报 OutOfSync，你会怎么处理？
+  a: 用 spec.ignoreDifferences 把 Deployment 的 /spec.replicas 排除（jsonPointers），让 ArgoCD 不把 HPA 的改动当作漂移去纠正；如果整个环境都以人工/其他控制器为准，可以改为只报警不自愈。核心判断：这个字段的权威是 Git 还是别人——是别人就不该自愈。
+- id: day12-q4
+  q: 一次镜像升级，在 GitOps 下的完整链路是怎样的？CI 和 CD 各做了什么？
+  a: 开发者 push 源码 → CI 构建并推送镜像、跑测试与扫描，记录不可变 digest → CI 用机器人账号把 digest 写进声明仓库并开 PR（合并后成为唯一事实源）→ ArgoCD 从 Git 拉取、渲染、对比集群，发现差异后同步。要点：CI 不碰集群、不持有 kubeconfig；用 digest 保证部署就是测试过的那份；回滚 = revert 那次提交。

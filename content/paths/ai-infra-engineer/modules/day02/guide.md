@@ -70,13 +70,14 @@ curl -s localhost:8000/metrics | grep -E "vllm:(time_to_first_token|time_per_out
 | `vllm:time_per_output_token_seconds` | TPOT 直方图 | 算每字延迟 |
 | `vllm:num_requests_running` | 正在推理的请求数 | 实时并发 |
 | `vllm:num_requests_waiting` | **排队中的请求数** | **持续>0 说明要扩容或调并发** |
-| `vllm:gpu_cache_usage_perc` | **KV Cache 使用率（显存水位）** | **接近100%是显存瓶颈** |
-| `vllm:gpu_prefix_cache_hit_rate` | 前缀缓存命中率 | 长 system prompt 场景的关键收益 |
-| `vllm:avg_prompt_throughput_toks_per_s` | 输入吞吐 | prefill 效率 |
-| `vllm:avg_generation_throughput_toks_per_s` | 输出吞吐 | decode 效率 |
-| `vllm:prompt_tokens_total` / `generation_tokens_total` | 累计 token 计数 | 计费基础 |
+| `vllm:kv_cache_usage_perc` | **KV Cache 使用率（显存水位）** | **接近100%是显存瓶颈** |
+| `vllm:prefix_cache_hits` / `vllm:prefix_cache_queries` | 前缀缓存命中 / 查询（计数对） | 长 system prompt 场景的关键收益 |
+| `vllm:prompt_tokens` / `vllm:generation_tokens` | 输入 / 输出 token 计数 | prefill、decode 吞吐；计费基础（Prometheus 计数器常暴露为 `*_total`） |
 
-**关键认知**：`num_requests_waiting` 和 `gpu_cache_usage_perc` 是两个「水位计」，一个看排队压力，一个看显存压力。排查性能问题先看这两个。
+> **指标名会随版本变**：vLLM 切到 v1 引擎后重命名了一批指标——`gpu_cache_usage_perc` 改为 `kv_cache_usage_perc`，`gpu_prefix_cache_hit_rate` 与 `avg_*_throughput_toks_per_s` 已移除（改为上表的计数值）。
+> 以你实际部署的版本为准：`curl -s localhost:8000/metrics | grep vllm:`
+
+**关键认知**：`num_requests_waiting` 和 `kv_cache_usage_perc` 是两个「水位计」，一个看排队压力，一个看显存压力。排查性能问题先看这两个。
 
 ## 2.5 压测：画出性能曲线
 

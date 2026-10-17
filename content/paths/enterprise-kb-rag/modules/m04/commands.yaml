@@ -1,0 +1,10 @@
+- hint: 判断 PDF 有无文本层（无嵌入字体基本是扫描件）
+  cmd: 'pdffonts report.pdf | head; pdfinfo report.pdf | grep -E "^Pages|^Encrypted|^Producer"'
+- hint: 带版面抽取前 3 页（-layout 保空格对齐，-nopgbrk 不插分页符）
+  cmd: 'pdftotext -layout -f 1 -l 3 -nopgbrk report.pdf -'
+- hint: 把扫描件 OCR 成带文本层 PDF（-l 指定中英，--deskew 纠偏，--rotate-pages 转正）
+  cmd: 'ocrmypdf -l chi_sim+eng --deskew --rotate-pages scan.pdf scan_ocr.pdf'
+- hint: 单页 OCR 并输出 tsv（含逐词 conf 置信度列，可统计解析可信度）
+  cmd: 'tesseract page.png page -l chi_sim+eng --psm 6 tsv'
+- hint: 快速分诊：逐份看字符数，极小即为扫描件或解析失败
+  cmd: 'for f in $(find . -name "*.pdf" | head -20); do printf "%8s  %s\n" "$(pdftotext "$f" - 2>/dev/null | wc -c)" "$f"; done'

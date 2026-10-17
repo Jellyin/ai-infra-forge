@@ -1,0 +1,10 @@
+- hint: 沿用里程碑 8 的本地向量库做查询理解的检索后端（如已在跑可跳过）
+  cmd: docker run -d --name qdrant -p 6333:6333 -v "$(pwd)/qdrant_storage:/qdrant/storage" qdrant/qdrant
+- hint: 备选——用 pgvector 全文检索，观察「去掉口语词」对 ts_rank 的影响
+  cmd: docker run -d --name pgv -e POSTGRES_PASSWORD=pg -p 5432:5432 pgvector/pgvector:pg16
+- hint: 装本地小模型做改写（无 GPU 也能跑）
+  cmd: pip install sentence-transformers
+- hint: 量一次改写的语义漂移（1 - 原 query 与改写 query 的余弦相似度）
+  cmd: 'python -c "from sentence_transformers import SentenceTransformer as S; from numpy import dot; from numpy.linalg import norm; m=S(\"paraphrase-multilingual-MiniLM-L12-v2\"); a,b=m.encode([\"上次那个报错咋回事\",\"错误码 0xE003 处置流程\"]); print(f\"drift={1-dot(a,b)/(norm(a)*norm(b)):.3f}\")"'
+- hint: 看某类题的过滤是否生效（把 dept 过滤加进检索后对比命中数）
+  cmd: 'curl -s -X POST http://localhost:6333/collections/chunks/points/scroll -H "Content-Type: application/json" -d ''{"filter":{"must":[{"key":"dept","match":{"value":"platform"}}]},"limit":5}'''

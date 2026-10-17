@@ -1,0 +1,10 @@
+- hint: 端到端阶梯加压，固定虚拟用户数与时长（k6 示意，工具与参数按你的栈替换）
+  cmd: k6 run --vus 30 --duration 3m e2e.js
+- hint: 简易压测找拐点（hey/ab/vegeta 任选；观察延迟分布而非平均值）
+  cmd: hey -z 30s -c 50 "http://$(kubectl get svc web -o jsonpath='{.spec.clusterIP}')"
+- hint: 查看节点实时资源占用（需 metrics-server；kind 默认不含，安装方式以官方文档为准）
+  cmd: kubectl top nodes
+- hint: 故障注入——删一个 pod，验证副本下限与自愈，再观测指标能否发现
+  cmd: kubectl delete pod -l app=web && kubectl get pods -l app=web -w
+- hint: 注入后走一次回滚并计时，得到本地 MTTR 基线
+  cmd: time kubectl rollout undo deployment/web && kubectl rollout status deployment/web

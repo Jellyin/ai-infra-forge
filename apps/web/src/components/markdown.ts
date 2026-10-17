@@ -1,5 +1,7 @@
 /** 极简 markdown 渲染：支持标题/段落/代码块/列表/粗体/行内代码/表格/引用/<details> 折叠块。
- * 内容受控（zod 校验后进入），esc() 转义 & < > 阻断标签注入，无属性插值。
+ * 内容来自仓库内的 content/**（构建期读入，**未经 zod**：loadPaths 只对 yaml 走校验，
+ * guideMd/labMd 是裸读）。因此 esc() 转义 & < > 是唯一的注入防线——无属性插值。
+ * 内容来源一旦外置（远程/CMS/社区内容包），必须换 marked + DOMPurify。
  * 表格渲染为真正的 <table>（连续 | 行收集成块，分隔行跳过）。
  * <details><summary>纯文本</summary> 独立成行 → 折叠块，内部按普通行渲染。 */
 
@@ -21,11 +23,11 @@ export function renderMarkdown(md: string): string {
   const body = md.replace(/^---\n[\s\S]*?\n---\n/, "");
   const lines = body.split("\n");
   const out: string[] = [];
-  let inCode = false, inList = false, inDetails = false;
+  let inCode = false, inList = false, listTag = "ul", inDetails = false;
   /** 收集中的表格行 */
   let tableRows: string[] = [];
 
-  const closeList = () => { if (inList) { out.push("</ul>"); inList = false; } };
+  const closeList = () => { if (inList) { out.push(`</${listTag}>`); inList = false; } };
 
   const flushTable = () => {
     if (!tableRows.length) return;
@@ -34,7 +36,7 @@ export function renderMarkdown(md: string): string {
     const cells0 = splitRow(rows[0] ?? "");
     const hasHeader = rows.length > 1 && /^\|[\s:|-]+\|?$/.test((rows[1] ?? "").trim());
     const bodyRows = hasHeader ? rows.slice(2) : rows;
-    const t: string[] = ['<table class="md-table">'];
+    const t: string[] = ['<div class="md-table-wrap"><table class="md-table">'];
     if (hasHeader) {
       t.push("<thead><tr>");
       for (const c of cells0) t.push(`<th>${inline(c)}</th>`);
@@ -46,7 +48,7 @@ export function renderMarkdown(md: string): string {
       for (const c of splitRow(r)) t.push(`<td>${inline(c)}</td>`);
       t.push("</tr>");
     }
-    t.push("</tbody></table>");
+    t.push("</tbody></table></div>");
     out.push(t.join(""));
   };
 
@@ -95,12 +97,12 @@ export function renderMarkdown(md: string): string {
       continue;
     }
     if (/^[-*]\s+/.test(line)) {
-      if (!inList) { out.push('<ul class="md-ul">'); inList = true; }
+      if (!inList) { listTag = "ul"; out.push('<ul class="md-ul">'); inList = true; }
       out.push(`<li>${inline(line.replace(/^[-*]\s+/, ""))}</li>`);
       continue;
     }
     if (/^(\d+)\.\s+/.test(line)) {
-      if (!inList) { out.push('<ul class="md-ul md-ol">'); inList = true; }
+      if (!inList) { listTag = "ol"; out.push('<ol class="md-ul md-ol">'); inList = true; }
       out.push(`<li>${inline(line.replace(/^(\d+)\.\s+/, ""))}</li>`);
       continue;
     }

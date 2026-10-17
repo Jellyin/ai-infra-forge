@@ -1,0 +1,24 @@
+- id: day04-c1
+  front: GitLab 内置安全扫描模板怎么接入？产物靠什么回流？
+  back: '用 include: - template: Security/XXX.gitlab-ci.yml 接入（SAST / Secret-Detection / Dependency-Scanning / Container-Scanning / DAST 等）。结果靠 artifacts:reports 的原生键回流到 Security 面板与 MR 小组件：sast→gl-sast-report.json、secret_detection→gl-secret-detection-report.json、dependency_scanning→gl-dependency-scanning-report.json、container_scanning→gl-container-scanning-report.json、dast→gl-dast-report.json。模板名与键随版本演进，以官方文档为准。'
+- id: day04-c2
+  front: SAST、SCA、Secret Detection、容器扫描、License、DAST 各自管什么、漏什么？
+  back: 'SAST 看源码模式（注入、危险 API、硬编码），漏运行期逻辑；SCA 看依赖的已知 CVE，漏 0-day 与「库被误用」；Secret Detection 看凭证模式，命中即已泄露、删文件不算修；容器扫描看镜像内包 CVE，只覆盖被扫的那个架构；License 看许可证类型，不看实际使用方式；DAST 跑起来打，最接近事实但最贵、最难进 MR 门禁。越靠左越便宜越远，越靠右越真但越慢。'
+- id: day04-c3
+  front: 为什么容器镜像扫描必须按架构分别做？
+  back: '一份 manifest list 下 amd64 与 arm64 是两组不同的层、不同的 SBOM、不同的 CVE 结果，扫描器一次只解析一个平台。只扫 amd64 等于对 arm64 生产镜像零覆盖。两个架构应各自构建、各自扫描，SBOM 与扫描结果都要覆盖两个架构。'
+- id: day04-c4
+  front: 「基线」和「allowlist」分别解决什么问题？各自要带什么元数据？
+  back: '基线冻结存量问题，让门禁只对本次新增负责，避免老项目第一天就红；allowlist 对确认不可利用／已线上缓解／误报的条目显式豁免。每条豁免必须带到期时间、责任人、理由，才能被审计与回收。承载它的文件（如历史上的 vulnerability-allowlist.yml）随版本演进，但那套机制不变。'
+- id: day04-c5
+  front: 分级阻断该怎么设计？「不阻断」什么时候是对的？
+  back: '硬拦：Secret Detection（入历史即泄露，只能轮换止血）、SCA/SAST 的 Critical 且本次新增。要求审批：High 新增。只报告：Medium/Low。不阻断适用于高成本、高误报、需人判断的检查（DAST、覆盖率趋势、License 提示）——但必须显式声明它不阻断，不能让它冒充门禁。'
+- id: day04-c6
+  front: 扫描结果回流 MR 有哪三条路径？真正的「阻断」在哪一层？
+  back: '① 报告：靠 artifacts:reports 的原生键驱动 MR 小组件与 Security 面板；② 内联注释：把 finding 落到改动的行上，当场可修；③ 合并门禁：真正的阻断不写在 .gitlab-ci.yml，而是合并请求审批策略（扫描器＋严重级别＋允许条数＋动作要求审批）。Job 变红只是提醒，门禁才是拦住。'
+- id: day04-c7
+  front: 「安全检查被全员静音」是怎么发生的？如何防？
+  back: '剧本：上线即几百条告警 → 看不过来 → 把 job 设成 allow_failure（或加 || true）→ 几个月后没人再看那个标签页 → 真实泄露发生，而报告里它一直写着。防法：首日只上高信噪比的三件套；基线冻结存量、只看增量；每条豁免带到期与责任人；定期复核 Top 误报并调规则；用「新增=修复」的收敛速度做度量，而不是告警总数。'
+- id: day04-c8
+  front: GitHub Actions 侧做安全扫描，对应的官方动作是哪些？
+  back: 'SAST 用 github/codeql-action 的 init@v3 与 analyze@v3；依赖/供应链用 actions/dependency-review-action@v4（需 on: pull_request）；任意扫描器结果靠 github/codeql-action/upload-sarif@v3 上传 SARIF 回流，需 permissions: security-events: write。Actions 以 SARIF 作通用回流通道，GitLab 更依赖原生报告键。'

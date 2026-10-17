@@ -1,0 +1,10 @@
+- hint: 跑检索侧评测，输出 recall@k / MRR / nDCG@k
+  cmd: python -m eval.retrieval --evalset evalset/gold-v1.jsonl --index http://localhost:6333 --k 10 --out reports/retrieval.json
+- hint: 跑生成侧评测，repeat 3 对抗 judge 不可复现
+  cmd: python -m eval.generation --evalset evalset/gold-v1.jsonl --judge configs/judge.yaml --repeat 3 --out reports/generation.json
+- hint: 校准 judge——算它与人工标注子集的一致率（kappa）
+  cmd: python -m eval.judge_agreement --judge reports/generation.json --human labels/human-50.jsonl --metric kappa
+- hint: 门禁判定（退步即阻断，失败时输出失败题清单）
+  cmd: python -m eval.gate --baseline reports/baseline.json --current reports/retrieval.json reports/generation.json --config configs/gate.yaml
+- hint: 导出 bad case（判定非正确的题，含 gold 排名便于定位检索还是生成）
+  cmd: jq -r 'select(.correct != "yes") | [.qid, .type, .correct, .judge_agreement, .gold_rank] | @tsv' reports/generation.json

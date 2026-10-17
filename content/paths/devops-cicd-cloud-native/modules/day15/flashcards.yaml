@@ -1,0 +1,21 @@
+- id: day15-c1
+  front: Helm 与 Kustomize 的核心区别是什么？各自成本？
+  back: 'Helm 是模板化（占位符 + values 渲染），表达强、生态好，成本是要渲染才知道结果、模板逻辑藏 bug；Kustomize 是叠加（base + overlay patch），接近最终 YAML、易审查，成本是 patch 写错可能静默不生效。'
+- id: day15-c2
+  front: 什么是「环境差异最小化」？overlay 里应该写什么？
+  back: overlay 只写必须不同的东西（副本数、资源、镜像、少量 env），能靠 base 表达的一律下沉到 base。差异越多越容易「dev 测过、prod 是另一份」。反模式是把 prod 清单复制一份再改——那是 fork。
+- id: day15-c3
+  front: 把镜像 digest 写进 Git 有哪两条路？各自取舍？
+  back: '① CI 提交变更：改 manifest 并 push，全程在 CI、审计清晰，但 CI 需写权限、提交噪音多；② ArgoCD Image Updater：监听 registry 回写 Git，CI 不用改仓库、支持 tag 正则跟版，但需单独组件。共同前提是分支保护 + 必过校验。'
+- id: day15-c4
+  front: 改了 ConfigMap 为什么 Pod 不生效？怎么正确触发重启？
+  back: '正在运行的 Pod 不会自动重读（env 注入的值在启动时固定）。用 checksum 注解：把内容哈希写进 pod template 的 annotation，内容变→annotation 变→触发滚动。Kustomize 用 configMapGenerator 自动给名字加哈希后缀，效果等价。'
+- id: day15-c5
+  front: livenessProbe 和 readinessProbe 语义有何不同？最常见误配？
+  back: 'liveness 问「进程还活着吗」，失败重启容器；readiness 问「能接流量吗」，失败只从 Service 摘除不重启。最常见误配是 liveness 探一个依赖 DB 的接口——DB 一抖全部 Pod 被重启，雪崩。'
+- id: day15-c6
+  front: CPU 和 memory 的 limits 该怎么区别对待？
+  back: CPU 可压缩，卡住只会变慢，通常不设 limit 或设很宽；memory 不可压缩，没有 limit 会 OOM 整个节点，必设。requests 全缺会让调度器过度超卖。memory 的 limit 与 requests 差距要留峰值余量，太近易 OOMKill。
+- id: day15-c7
+  front: PDB 管什么、不管什么？最常见误配？
+  back: 'PDB 管自愿中断（节点排空、滚动升级），不防节点宕机。最常见误配是把 minAvailable 设成等于总副本数——任何节点都无法排空、kubectl drain 卡住。应留可中断余量，如 maxUnavailable 为 1。'

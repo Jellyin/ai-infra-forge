@@ -146,7 +146,7 @@ test("P2 · 闪卡评分交互延迟（真实内容 39 卡）", async ({ page })
         // 剔除 Playwright 驱动往返（evaluate/click 各 ~10-15ms）后的「真实应用延迟」
         const dtInPage = await page.evaluate((prev) => {
           return new Promise<number>((resolve) => {
-            const container = document.querySelector("main > div:not([style*='none'])");
+            const container = document.querySelector("main > div:not([hidden])");
             const target = container?.querySelector(".btn--good");
             if (!target || !container) { resolve(-1); return; }
             let t0 = 0;
@@ -169,7 +169,7 @@ test("P2 · 闪卡评分交互延迟（真实内容 39 卡）", async ({ page })
         const t0 = await page.evaluate(() => performance.now());
         await scope2.locator(".btn--good").click();
         await page.waitForFunction((prev) => {
-          const el = document.querySelector("main > div:not([style*='none']) .flashcard__front-text");
+          const el = document.querySelector("main > div:not([hidden]) .flashcard__front-text");
           return !el || el.textContent !== prev;
         }, before ?? "", { timeout: 5000 });
         times.push(await page.evaluate(() => performance.now()) - t0);
@@ -285,7 +285,7 @@ test("P3b · React 层：990 卡状态注入 → 真实评分链路重渲染 + �
     const t0 = await page.evaluate(() => performance.now());
     await scope.locator(".btn--good").click();
     await page.waitForFunction((prev) => {
-      const el = document.querySelector("main > div:not([style*='none']) .flashcard__front-text");
+      const el = document.querySelector("main > div:not([hidden]) .flashcard__front-text");
       return !el || el.textContent !== prev;
     }, before ?? "", { timeout: 5000 });
     times.push(await page.evaluate(() => performance.now()) - t0);
@@ -322,7 +322,7 @@ test("P4 · 五 tab 常驻挂载：切换耗时", async ({ page }) => {
       await page.click(`nav.tabs button:has-text("${tab}")`);
       await page.waitForFunction((label) => {
         const btn = Array.from(document.querySelectorAll("nav.tabs button")).find((b) => b.textContent?.includes(label));
-        return btn?.getAttribute("aria-current") === "page";
+        return btn?.getAttribute("aria-selected") === "true";
       }, tab, { timeout: 5000 });
       const dt = await page.evaluate(() => performance.now()) - t0;
       all.push(dt);
@@ -349,7 +349,7 @@ test("P5 · 勾选清单 → 组件树重渲染（勾选 → checked 上屏）",
     const t0 = await page.evaluate(() => performance.now());
     await boxes.nth(i).click();
     await page.waitForFunction((idx) => {
-      const el = document.querySelectorAll("main > div:not([style*='none']) .checklist__box")[idx];
+      const el = document.querySelectorAll("main > div:not([hidden]) .checklist__box")[idx];
       return el?.checked === true;
     }, i, { timeout: 5000 });
     times.push(await page.evaluate(() => performance.now()) - t0);

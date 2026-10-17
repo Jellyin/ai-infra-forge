@@ -1,0 +1,20 @@
+id: day01
+title: 流水线的心智模型与真实失败模式
+goal: 先建立「一次 pipeline 到底发生了什么」的准确模型，再谈优化
+order: 1
+track: 轨道 1 · 流水线主干与 CI 内嵌能力
+read: 20
+lab: 25
+concepts:
+  - 三种 token 别搞混（glrt- / CI_JOB_TOKEN / Project Access Token）
+  - stage、job、runner、executor 的关系
+  - DAG：needs 取代 stage 顺序，扇出与扇入
+  - workflow:rules 决定「要不要有 pipeline」
+  - Actions 对照：workflow/job/step 与 needs
+  - 八种「看起来在跑、其实没测到」的失败模式
+checklist:
+  - 能画出一次提交从 push 到 job 结束的完整链路
+  - 能说出三种 token 各自的用途与边界
+  - 能用 needs 把串行 stage 改成 DAG 并说明收益
+  - 能用 workflow:rules 阻止不该跑的 pipeline
+  - 能列出至少 5 个「假绿灯」失败模式并给出排查方法

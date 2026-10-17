@@ -1,0 +1,10 @@
+- hint: 端到端 P95 延迟（从 Prometheus HTTP API 查）
+  cmd: 'curl -sG http://localhost:9090/api/v1/query --data-urlencode ''query=histogram_quantile(0.95, sum by (le) (rate(qa_e2e_duration_seconds_bucket[5m])))'' | jq ''.data.result'''
+- hint: 拒答率（outcome 标签按你的埋点命名）
+  cmd: 'curl -sG http://localhost:9090/api/v1/query --data-urlencode ''query=sum(rate(qa_requests_total{outcome="refused"}[5m])) / sum(rate(qa_requests_total[5m]))'' | jq ''.data.result'''
+- hint: 每租户 token 速率与在飞请求（成本归因与「谁在刷」）
+  cmd: 'curl -sG http://localhost:9090/api/v1/query --data-urlencode ''query=sum by (tenant_id) (rate(qa_tokens_total[5m]))'' | jq ''.data.result'''
+- hint: 抓自建推理服务的运行指标（显存/并发/正在运行的请求；路径按你的 vLLM 版本）
+  cmd: 'curl -s http://localhost:8000/metrics | grep -E ''(gpu_cache_usage|num_requests_running|num_requests_waiting)'''
+- hint: 缓存命中率（骤降通常意味着缓存键或前缀失配，且会推高 GPU 成本）
+  cmd: 'curl -sG http://localhost:9090/api/v1/query --data-urlencode ''query=sum(rate(qa_cache_hits_total[5m])) / sum(rate(qa_requests_total[5m]))'' | jq ''.data.result'''

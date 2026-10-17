@@ -1,0 +1,24 @@
+- id: day06-c1
+  front: 四种构建方案里，为什么「挂 docker.sock」应当默认判红？
+  back: 挂载 /var/run/docker.sock 等于把宿主机 Docker daemon 的控制权交给这段脚本——拿到它就能 docker run --privileged -v /:/host 读宿主根文件系统，等价于宿主 root。在 CI 里任何能触发 pipeline 的人（含外部 MR）都能用上，绕过镜像与隔离，所以默认判红。
+- id: day06-c2
+  front: BuildKit rootless、Buildah、DinD、socket 绑定，各自的特权要求是什么？
+  back: 'BuildKit rootless 与 Buildah 都无需 privileged（用 user namespace / fuse-overlayfs）；DinD 通常需要 privileged runner 才能起内层 dockerd；socket 绑定无需 privileged，但直接把宿主 daemon 暴露出去，危险度最高。'
+- id: day06-c3
+  front: 为什么构建期密钥要用 BuildKit secret 而不是 --build-arg？
+  back: --build-arg 传入的值会写进镜像历史（docker history 可见），即便 RUN 里删掉文件也留在层里。BuildKit secret 只在 RUN 期间以 --mount=type=secret 挂载，不落层、不进 history，可来自文件或 env。
+- id: day06-c4
+  front: distroless 镜像的好处与代价分别是什么？
+  back: 好处是去掉 shell 与包管理器，攻击面与体积都小，配合 nonroot 变体默认非 root（uid 65532）。代价是排障手段少（容器里没有 sh），需要时改用 debug 变体或临时边车。
+- id: day06-c5
+  front: 「可复现构建」在本项目里具体指什么？三个常见的不确定源是什么？
+  back: 指同一 commit + 同一构建参数产出同一镜像 digest。三个不确定源：浮动基础镜像 tag（应固定到 @sha256:）、内嵌的时间戳（SOURCE_DATE_EPOCH）、文件/打包顺序不稳（明确排序、用锁文件）。
+- id: day06-c6
+  front: 多阶段构建相比「合并 RUN 清理」，先进在哪？
+  back: 多阶段把编译工具链整个留在 build 阶段，最终镜像只 COPY 产物，体积与攻击面天然更小；再配合 --mount=type=cache 让构建缓存不落进镜像层，比在单个 RUN 里手工清理更干净，也不会因为多写一层而把临时文件留在层里。
+- id: day06-c7
+  front: 为了给 Day 7 的多架构铺路，Dockerfile 要写成什么样？
+  back: 构建不写死平台：用 FROM --platform=$BUILDPLATFORM 的构建阶段，声明 ARG TARGETOS TARGETARCH，把架构交给参数驱动（如 GOARCH=$TARGETARCH）。这样构建产物与架构解耦，明天两个架构才能复用同一套构建逻辑与缓存。
+- id: day06-c8
+  front: --load 在构建上有什么限制？
+  back: --load 只能把单一平台的镜像加载进本地 docker，多平台构建（--platform 指定多个）时不能用 --load 落地，必须走 --push 推到 registry，或 --output type=oci 导出 OCI 布局。这是多架构实验最常见的坑。

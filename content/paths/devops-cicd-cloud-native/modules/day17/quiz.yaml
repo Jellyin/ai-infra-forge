@@ -1,0 +1,12 @@
+- id: day17-q1
+  q: 8 卡分布式训练经常「有人起不来、谁都跑不动」，最可能缺什么能力？
+  a: '缺 gang scheduling（成组调度）。默认 kube-scheduler 逐 Pod 调度，可能一部分 worker 拿到 GPU、另一部分留 Pending，所有 worker 卡在 allreduce 死等。解决：Volcano PodGroup（设 minMember）、scheduler-plugins coscheduling，或用 Kueue 做准入排队与配额。'
+- id: day17-q2
+  q: 一条「数据→训练→评估→注册」的流水线，评估该怎样才算真正的门禁？
+  a: '评估要输出机器可读指标（JSON artifact），门禁步骤拿它跟固定基线（上一个 champion）或绝对阈值比较，不达标就非零退出，使依赖它的注册/部署步骤被跳过。只把指标打成表格给人看、或指标只在日志里，都不构成门禁。'
+- id: day17-q3
+  q: 训练 Pod 因抢占失败，编排器配置了 retryStrategy 自动重试。还需要什么前提，重试才有意义？
+  a: '需要 checkpoint + 续训能力。编排层只会「原样重跑容器」，不懂 checkpoint；如果训练脚本不能从 checkpoint resume，重试就是从零再跑一遍，等于把之前几小时的 GPU 时间浪费掉。此外要区分基础设施类（值得重试）与业务类（重试无意义）失败。'
+- id: day17-q4
+  q: 把模型从共享盘上的一个文件变成「一等制品」，收益是什么？
+  a: '可获得内容寻址（digest）与不可变引用，从而能：跨环境精确晋级、做金丝雀/回滚、签名（cosign）与扫描、审计血缘。否则「线上是哪个模型」不可证，灰度与回滚都无从谈起。两条路线是模型注册表（models:/name@alias）或 OCI 制品（registry/name@digest）。'

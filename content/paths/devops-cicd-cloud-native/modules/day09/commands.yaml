@@ -1,0 +1,10 @@
+- hint: keyless 签名（CI 里带 OIDC 身份；本地走浏览器 OIDC 流程）
+  cmd: cosign sign --yes registry.example.com/api@sha256:ac1f0e...
+- hint: keyless 验签（身份与 issuer 必须显式给出，否则等于没验）
+  cmd: cosign verify registry.example.com/api@sha256:ac1f0e... --certificate-identity-regexp 'https://gitlab.com/org/repo/.+' --certificate-oidc-issuer https://gitlab.com
+- hint: 从镜像生成 CycloneDX 格式 SBOM
+  cmd: syft registry.example.com/api:1.4.0 -o cyclonedx-json > sbom.cdx.json
+- hint: 把 SBOM 作为 attestation 附着在镜像 digest 上
+  cmd: cosign attach sbom --sbom sbom.cdx.json registry.example.com/api@sha256:ac1f0e...
+- hint: 用 trivy 直接对镜像做漏洞扫描（也可产出 SBOM）
+  cmd: trivy image registry.example.com/api:1.4.0

@@ -1,0 +1,10 @@
+- hint: 注册一个外部集群到 ArgoCD（argocd 为 context 名；CLI 子命令随版本演进，以官方文档为准）
+  cmd: argocd cluster add prod-cluster
+- hint: 列出已注册的集群，核对多集群拓扑
+  cmd: argocd cluster list
+- hint: 创建一个 AppProject 限定可用仓库与目标命名空间
+  cmd: argocd proj create team-demo --src https://github.com/example/gitops.git --dest https://kubernetes.default.svc,demo-*
+- hint: 查看集群里所有 ApplicationSet 与它们生成的 Application
+  cmd: kubectl -n argocd get applicationset,applications
+- hint: 查看某个 Application 的同步操作记录（谁触发、哪个 revision，status.operationState）
+  cmd: kubectl -n argocd get application guestbook -o jsonpath='{.status.operationState}'

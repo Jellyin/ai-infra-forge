@@ -1,0 +1,12 @@
+- id: day02-q1
+  q: 一条分层反馈链里，为什么 lint 与类型检查必须既「跑得早」又「阻断合并」，但又不该拖长关键路径？
+  a: '跑得早让最便宜的否决先发生，避免把 10 秒能解决的问题浪费在 10 分钟的 e2e 反馈上；阻断合并保证没人能绕过它——不阻断的快检查只是通知，不构成门禁。不拖长关键路径靠 needs 解耦：unit 不必等整个 check stage 结束就能并行起步，lint 的结论最后校验即可。把「阻断」误解成「排他串行」是这条链最常见的退化。'
+- id: day02-q2
+  q: matrix 展开后 job 数暴涨导致变慢，先看什么？这和「测试本身变慢」怎么区分？
+  a: 先看 job 是否长时间停在 pending——那是 runner 并发被打满，是资源问题（要么减维度、要么加 runner），不是测试变慢。若每个 job 的实际执行时长正常、总时长却很长，说明是乘法展开吃掉了并发。测试本身变慢的标志是单个 job 的执行时间上升，与 job 数量无关。
+- id: day02-q3
+  q: rules:changes 在什么情况下会「恒为真」？你项目里的判定依据应该是什么？
+  a: 在没有可比较基线的 pipeline 里恒为真，包括新分支首次 push、tag pipeline、scheduled 与 multi-project pipeline。因此路径过滤必须配显式兜底规则，把判不出基线的情况写清楚。更稳的判定依据是构建图工具算出的 affected 集合（Nx affected、Turborepo --filter、Bazel query），并且要满足两条：可解释（能说明为什么这次跑了 billing）与保守（拿不准就跑，漏跑是静默假绿灯）。锁文件或公共库变更一律全量跑。
+- id: day02-q4
+  q: 把 retry.max 调大为什么是错的解法？真正该做什么？
+  a: '因为它只是降低 flake 被发现的概率，不修任何东西——同 commit 两次结果不一致的检出率会随重试次数上升而下降，问题被藏得更深，还会额外消耗 runner 时间。真正要做的是：用「同 commit 重跑结果不一致」把 flake 用例实名打点，隔离到带 owner 与 deadline 的 quarantine job，然后查时区、随机端口、测试间共享状态、缺 await、mock 时钟、CPU 限流这些根因，最后归位并补防回归。retry 本身只该保留 runner_system_failure 与 stuck_or_timeout_failure 这类基础设施抖动。'

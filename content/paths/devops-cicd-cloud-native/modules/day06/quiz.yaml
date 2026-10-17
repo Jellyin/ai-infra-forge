@@ -1,0 +1,12 @@
+- id: day06-q1
+  q: 团队想在 CI 里最快地构建镜像，打算把宿主机的 /var/run/docker.sock 挂进 job。你怎么评估这个方案？
+  a: 反对。挂 socket 等于把宿主 Docker daemon 的控制权交给 job 脚本，可起 privileged 容器、挂宿主根文件系统，等价宿主 root；而 CI 里任何能触发 pipeline 的人（含外部 MR）都能用。正解是默认用 rootless BuildKit 或 Buildah（无需 privileged），确需完整 docker CLI 行为时用 DinD（需要 privileged runner，但仍比裸 socket 隔离），绝不挂 socket。
+- id: day06-q2
+  q: 有人用 --build-arg 传私有 registry 的 token，并在 RUN 里把写入的 .npmrc 删掉了，为什么仍不安全？
+  a: 因为 --build-arg 的值会进入镜像历史，docker history --no-trunc 能看到传入的参数，且文件删除只影响最终层，中间层仍含这些内容（layered filesystem）。应改用 BuildKit secret：RUN --mount=type=secret,id=...,target=...，配合 --secret id=...,src=/env=...，密钥不落层、不进 history。
+- id: day06-q3
+  q: 什么叫「可复现构建」？如果做不到完全可复现，至少要先锁住哪些输入？
+  a: '指同一 commit + 同一构建参数产出同一镜像 digest。做不到全量时，先锁：① 基础镜像固定到 @sha256: digest 而非浮动 tag；② 时间戳用 SOURCE_DATE_EPOCH（或构建器的时间戳重写选项）；③ 文件与打包顺序明确、依赖安装用锁文件。这三点能消除大部分 digest 漂移。'
+- id: day06-q4
+  q: --load 为什么在多平台构建时会失败？多平台镜像应该怎么落地？
+  a: 因为 --load 只能把单一平台的镜像导入本地 docker 镜像存储，而多平台构建产出一个 manifest list / OCI index，本地 docker 无法表示「一个 tag 对应多架构」。多平台构建应使用 --push 推到 registry，或 --output type=oci 导出 OCI 布局，而不是 --load。

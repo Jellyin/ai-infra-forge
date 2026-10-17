@@ -1,0 +1,10 @@
+- hint: '在 GitHub Actions job 里取 OIDC 令牌（需 permissions 里的 id-token 权限）'
+  cmd: 'curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com"'
+- hint: 用 OIDC 令牌向 AWS 换取短期 STS 凭证（免长期密钥）
+  cmd: aws sts assume-role-with-web-identity --role-arn arn:aws:iam::<acct>:role/ci-deploy --role-session-name ci --web-identity-token file:///tmp/oidc-token
+- hint: 用 CI 的 OIDC 身份登入 Vault（auth method 需已启用 jwt/oidc）
+  cmd: vault write auth/jwt/login role=ci jwt=@/tmp/oidc-token
+- hint: 从 Vault 动态 secrets engine 换取一份带 TTL 的短期数据库凭证
+  cmd: vault read database/creds/readonly
+- hint: 扫描仓库中已提交的密钥（参数随版本演进，以官方文档为准）
+  cmd: gitleaks detect --source . --report-format json --report-path leaks.json

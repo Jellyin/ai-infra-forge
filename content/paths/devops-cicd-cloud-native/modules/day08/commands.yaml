@@ -1,0 +1,10 @@
+- hint: 取镜像的 digest（内容寻址身份，tag 可变而它不变）
+  cmd: crane digest registry.example.com/api:1.4.0
+- hint: 把 dev 上验证过的同一 digest 搬到 staging（不重新构建）
+  cmd: crane copy registry.example.com/api@sha256:ac1f0e... registry.example.com/staging/api:1.4.0
+- hint: 多架构整仓搬运（--all 带上 manifest list 里全部平台）
+  cmd: skopeo copy --all docker://registry.example.com/api@sha256:ac1f0e... docker://registry.example.com/prod/api:1.4.0
+- hint: 取多架构镜像顶层 index（manifest list）的 digest
+  cmd: docker buildx imagetools inspect registry.example.com/api:1.4.0 --format '{{json .Manifest.Digest}}'
+- hint: 删除一个不再需要的 tag（regclient 的 regctl）
+  cmd: regctl tag rm registry.example.com/api:main-9f31c2a

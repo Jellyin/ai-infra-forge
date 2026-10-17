@@ -1,0 +1,10 @@
+- hint: 查看某个 Application 的同步状态与健康状态（argocd CLI 子命令随版本演进，以官方文档为准）
+  cmd: argocd app get guestbook
+- hint: 对比 Git 期望与集群真实的差异（不改动集群）
+  cmd: argocd app diff guestbook
+- hint: 手动触发一次同步
+  cmd: argocd app sync guestbook
+- hint: 打开自动同步（等价于给 Application 加 syncPolicy.automated）
+  cmd: argocd app set guestbook --sync-policy automated
+- hint: 直接看集群里所有 Application 的同步状态（不依赖 CLI）
+  cmd: kubectl get applications -n argocd

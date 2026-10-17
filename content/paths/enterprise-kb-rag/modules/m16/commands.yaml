@@ -1,0 +1,10 @@
+- hint: 起向量库并对过滤字段建索引（多租户常按 tenant_id 过滤）
+  cmd: 'docker run -d --name kb-qdrant -p 6333:6333 qdrant/qdrant && curl -s -X PUT localhost:6333/collections/kb/index -H "Content-Type: application/json" -d ''{"field_name":"tenant_id","field_schema":"keyword"}'''
+- hint: 写入带 tenant_id/acl/doc_id 的多租户数据
+  cmd: 'curl -s -X PUT "localhost:6333/collections/kb/points?wait=true" -H "Content-Type: application/json" -d ''{"points":[{"id":1,"vector":[0.1,0.2,0.3,0.4],"payload":{"tenant_id":"tenant-a","acl":["g-all"],"doc_id":"a-doc-1"}},{"id":3,"vector":[0.9,0.1,0.1,0.1],"payload":{"tenant_id":"tenant-b","acl":["g-all"],"doc_id":"b-doc-1"}}]}'''
+- hint: 以某租户身份带过滤检索，验证看不到别的租户（应 0 命中）
+  cmd: 'curl -s -X POST "localhost:6333/collections/kb/points/search" -H "Content-Type: application/json" -d ''{"vector":[0.1,0.2,0.3,0.4],"limit":5,"with_payload":true,"filter":{"must":[{"key":"tenant_id","match":{"value":"tenant-b"}},{"key":"acl","match":{"any":["g-all"]}}]}}'''
+- hint: 删除请求按 doc_id 批量删（被遗忘权）
+  cmd: 'curl -s -X POST "localhost:6333/collections/kb/points/delete?wait=true" -H "Content-Type: application/json" -d ''{"filter":{"must":[{"key":"doc_id","match":{"value":"a-doc-2"}}]}}'''
+- hint: 删除后反查，断言该 doc_id 已 0 命中
+  cmd: 'curl -s -X POST "localhost:6333/collections/kb/points/scroll" -H "Content-Type: application/json" -d ''{"filter":{"must":[{"key":"doc_id","match":{"value":"a-doc-2"}}]},"limit":10}'''

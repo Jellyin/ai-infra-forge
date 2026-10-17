@@ -1,0 +1,10 @@
+- hint: 对目录做依赖/凭证/配置三类扫描，只看高危及以上
+  cmd: 'docker run --rm -v "$PWD:/src" aquasec/trivy fs --scanners vuln,secret,misconfig --severity HIGH,CRITICAL /src'
+- hint: 扫指定架构的容器镜像 CVE（多架构要 amd64/arm64 各跑一次）
+  cmd: 'docker run --rm aquasec/trivy image --platform linux/arm64 --severity HIGH,CRITICAL alpine:3.20'
+- hint: 导出某个架构镜像的 SBOM（CycloneDX，per-arch 各一份）
+  cmd: 'docker run --rm aquasec/trivy image --platform linux/amd64 --format cyclonedx --output - alpine:3.20 > sbom-amd64.json'
+- hint: 扫描仓库中的凭证并输出 SARIF（可回流 GitLab/Actions）
+  cmd: 'docker run --rm -v "$PWD:/src" zricethezav/gitleaks:latest detect --source /src --report-format sarif --report-path /src/gitleaks.sarif'
+- hint: 用 semgrep 规则集做源码扫描，命中即非零退出（用 scan 而非 ci：ci 需要平台 token）
+  cmd: 'docker run --rm -v "$PWD:/src" semgrep/semgrep semgrep scan --config p/ci --error /src'

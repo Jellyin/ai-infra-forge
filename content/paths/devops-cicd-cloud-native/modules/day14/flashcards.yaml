@@ -1,0 +1,21 @@
+- id: day14-c1
+  front: 滚动、蓝绿、金丝雀各自换来什么、代价是什么？
+  back: '滚动零额外组件但新旧共存、按比例观测难；蓝绿切换原子但需双倍资源、切流瞬间全体进新版；金丝雀按比例放量验证真实流量，但需流量路由能力与可靠指标判定。'
+- id: day14-c2
+  front: Rollout 的 canary.steps 里 setWeight、pause、analysis 各是什么？
+  back: 'setWeight 设流量权重（需 trafficRouting，无路由时用 setCanaryScale 控副本比例）；pause 带 duration 是定时、写成 {} 是无限期等 promote；analysis 步骤把该步的观察交给 AnalysisTemplate。'
+- id: day14-c3
+  front: AnalysisTemplate 里 failureLimit 和 consecutiveErrorLimit 分别管什么？
+  back: 'failureLimit 是允许的判定失败次数，不是一次不达标就回滚（设 1 会让任何抖动触发回滚）；consecutiveErrorLimit 是查询本身出错允许的次数。两者都要设，否则「查不到数据」会被静默忽略。'
+- id: day14-c4
+  front: 「自动回滚」里谁做判定、谁执行动作？
+  back: 判定由 AnalysisTemplate（Prometheus 查询 + successCondition/failureLimit）完成；执行由 Argo Rollouts controller 完成——它把流量导回稳定版并标记 Degraded。不是 CI，也不是人手点。
+- id: day14-c5
+  front: 自动回滚最常见的三类误判来源？对策？
+  back: '① 样本量不足：小分母放大失败比例，对策是给足 failureLimit、留足 pause；② 抖动/冷启动：新副本首启延迟偏高，对策是让 analysis 覆盖过冷启动；③ 指标选错：用 CPU 会因流量倾斜误判，应选错误率、p95/p99 延迟。'
+- id: day14-c6
+  front: 数据库变更的向后兼容两阶段怎么做？
+  back: 'expand：加可空新列、新代码双写；migrate：回填历史数据、读路径切到新列；contract：所有实例升级后再删旧列。判据是「只有当回滚旧版本不再需要旧结构时，才能执行 contract」。'
+- id: day14-c7
+  front: 多架构集群里镜像架构不匹配会造成什么样的发布事故？
+  back: 混有 amd64/arm64 节点而镜像只推 amd64 时，新副本在 arm64 上 exec format error 起不来。金丝雀卡在副本起不来、指标分母为 0，analysis 既不算成功也不算失败——发布静默卡住而非明确失败。

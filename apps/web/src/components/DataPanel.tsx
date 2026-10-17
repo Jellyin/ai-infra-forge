@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { useProgress } from "../hooks/useProgress.ts";
 
 type Progress = ReturnType<typeof useProgress>;
@@ -7,9 +7,30 @@ type Progress = ReturnType<typeof useProgress>;
 export default function DataPanel({ progress, onClose }: { progress: Progress; onClose: () => void }) {
   const { exportData, importData } = progress;
   const fileRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
   /** 导入前确认（覆盖是破坏性操作，评审 M） */
   const [pendingFile, setPendingFile] = useState<{ name: string; json: string } | null>(null);
+
+  /* 对话框焦点管理：入框 → 圈在框内 → Esc 关闭 → 归还给触发元素。
+     aria-modal 只是声明，不隔离背景，必须自己做。 */
+  useEffect(() => {
+    const prev = document.activeElement as HTMLElement | null;
+    dialogRef.current?.focus();
+    const SEL = 'button, [href], input, textarea, [tabindex]:not([tabindex="-1"])';
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { onClose(); return; }
+      if (e.key !== "Tab" || !dialogRef.current) return;
+      const f = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(SEL))
+        .filter((el) => !el.hasAttribute("disabled") && el.offsetParent !== null);
+      if (!f.length) return;
+      const first = f[0]!, last = f[f.length - 1]!;
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("keydown", onKey); prev?.focus(); };
+  }, [onClose]);
 
   const download = () => {
     const blob = new Blob([exportData()], { type: "application/json" });
@@ -17,13 +38,23 @@ export default function DataPanel({ progress, onClose }: { progress: Progress; o
     const a = document.createElement("a");
     a.href = url;
     a.download = `aiforge-progress-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    a.remove();
+    // 同步 revoke 会让 Firefox/Safari 拿到失效 URL（下载 0 字节），让出一轮事件循环再释放
+    setTimeout(() => URL.revokeObjectURL(url), 0);
     setStatus({ ok: true, message: "已下载导出文件，请妥善保存" });
   };
 
   const onFile = async (f: File | undefined, input?: HTMLInputElement) => {
     if (!f) return;
+    /* 体积护栏：超大 JSON 在主线程解析会冻结页面（自伤型，但护栏成本极低） */
+    const MAX_IMPORT_BYTES = 10 * 1024 * 1024;
+    if (f.size > MAX_IMPORT_BYTES) {
+      setPendingFile(null);
+      setStatus({ ok: false, message: `文件过大（${(f.size / 1024 / 1024).toFixed(1)} MB），上限 10 MB` });
+      return;
+    }
     const text = await f.text();
     setPendingFile({ name: f.name, json: text });
     setStatus(null);
@@ -41,6 +72,7 @@ export default function DataPanel({ progress, onClose }: { progress: Progress; o
   return (
     <div className="modal-backdrop" onClick={onClose} role="presentation">
       <div className="modal" role="dialog" aria-modal="true" aria-label="学习数据管理"
+        ref={dialogRef} tabIndex={-1}
         onClick={(e) => e.stopPropagation()}>
         <h2 className="card__title">学习数据</h2>
         <p className="card__subtitle">

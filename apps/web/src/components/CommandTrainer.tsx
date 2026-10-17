@@ -1,12 +1,12 @@
-import { useState, useMemo, useRef, useEffect } from "react";
-import type { PathContent } from "@aiforge/content-schema";
+import { memo, useState, useMemo, useRef, useEffect } from "react";
+import type { PathMeta } from "@aiforge/content-schema";
 import { scoreCommand } from "@aiforge/logic";
 import { commandKey } from "../lib/keys.ts";
 import type { useProgress } from "../hooks/useProgress.ts";
 
 type Progress = ReturnType<typeof useProgress>;
 
-export default function CommandTrainer({ path, progress }: { path: PathContent; progress: Progress }) {
+function CommandTrainer({ path, progress, onGoTab }: { path: PathMeta; progress: Progress; onGoTab?: (tab: string) => void }) {
   const { commands, completeCommand } = progress;
   const [idx, setIdx] = useState(0);
   const [typed, setTyped] = useState("");
@@ -23,7 +23,14 @@ export default function CommandTrainer({ path, progress }: { path: PathContent; 
     return out;
   }, [path]);
 
-  if (!flat.length) return <p className="empty">本路径没有命令训练</p>;
+  if (!flat.length) return (
+    <div>
+      <h2 className="card__title">命令训练</h2>
+      <p className="empty">本路径没有命令训练
+        {onGoTab && <> · <button className="btn" onClick={() => onGoTab("path")}>回到学习路径</button></>}
+      </p>
+    </div>
+  );
   const current = flat[Math.min(idx, flat.length - 1)]!;
   const score = scoreCommand(current.cmd, typed);
   const doneCount = flat.filter((c) => (commands[c.key] || 0) > 0).length;
@@ -51,6 +58,12 @@ export default function CommandTrainer({ path, progress }: { path: PathContent; 
 
   return (
     <>
+      {/* 区块标题：读屏的标题导航需要锚点，此前整页没有 h1/h2/h3 */}
+      <h2 className="card__title">命令训练</h2>
+      <p className="card__subtitle" id="cmd-reveal-note" style={{ marginTop: "calc(var(--space-2) * -1)" }}>
+        逐字符比对，敲对即计入完成（空格、引号等细节也会比对）。「显示答案」不计分，看完需重新默写。
+      </p>
+
       <div className="stat-grid" style={{ marginBottom: "var(--space-4)" }}>
         <div className="stat-tile"><div className="stat-tile__value">{doneCount}/{flat.length}</div><div className="stat-tile__label">已练成命令</div></div>
         <div className="stat-tile"><div className="stat-tile__value">{revealed ? "—" : `${Math.round(score.accuracy * 100)}%`}</div><div className="stat-tile__label">当前准确率</div></div>
@@ -79,7 +92,7 @@ export default function CommandTrainer({ path, progress }: { path: PathContent; 
             <>
               <button className="btn" onClick={next}>下一条 →</button>
               <button className="btn" onClick={clear}>清空</button>
-              <button className="btn" onClick={reveal} title="看答案不计分，看完需重新默写">显示答案</button>
+              <button className="btn" onClick={reveal} aria-describedby="cmd-reveal-note">显示答案</button>
             </>
           )}
         </div>
@@ -93,3 +106,6 @@ export default function CommandTrainer({ path, progress }: { path: PathContent; 
     </>
   );
 }
+
+/* 五个 tab 常驻挂载：memo 配合 App 里的稳定回调，切 tab 时只重渲染目标面板 */
+export default memo(CommandTrainer);

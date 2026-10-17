@@ -1,0 +1,24 @@
+- id: day11-c1
+  front: 环境矩阵里的 dev / review / staging / prod 各自「为谁负责」？
+  back: dev 给开发者自测、数据可随时重建；review 给每个 MR 的验收者、按 MR 隔离、随 MR 生灭；staging 给发布前回归、与 prod 同构、用脱敏数据；prod 给真实用户、受 SLO 约束。用职责定义环境，而不是用机器。
+- id: day11-c2
+  front: 为什么 review 环境是临时的？关键机制是什么？
+  back: 它证明环境不必是长驻机器，而是随变更生、随变更灭的资源。GitLab 里靠 environment 的 on_stop 定义一个「停止」job，MR 关闭时自动清理；否则临时环境会变成僵尸资源。
+- id: day11-c3
+  front: trunk-based 与 Git Flow 分支流最真实的成本差别是什么？
+  back: 分支流把集成推迟到发布前集中合并，导致 merge hell 与回归集中爆发；trunk-based 让分支短命、持续集成，用 feature flag 解耦「代码合并」与「功能发布」。代价是它要求更强的自动化测试与快速回滚能力。
+- id: day11-c4
+  front: 受保护分支与受保护环境分别保护什么？为什么不能互相替代？
+  back: 受保护分支保护「代码入口」（谁能 push/合并）；受保护环境保护「部署入口」（谁能部署、谁能批准）。一个是代码的关口，一个是部署的关口，任一缺失都留缺口。
+- id: day11-c5
+  front: 环境隔离的最小集是哪三件事？只做 namespace 够吗？
+  back: 数据、凭证、网络三件事各自独立。数据要独立库/schema 且 prod 不共享；凭证每环境独立、prod 只对 prod 生效；网络不同 ns/VPC 且默认拒绝。命名空间隔离只是下限，数据与凭证隔离才是真正的防线。
+- id: day11-c6
+  front: 什么是回滚窗口？窗口为什么会关闭？
+  back: '回滚窗口 = 从变更上线到「还能安全回滚」这段时间。关闭原因举例：数据库 schema 已改、数据已被新逻辑写入、外部 API/契约已发布、已有下游消费了你发出的事件。凡是动了数据的变更，退路要在变更前准备好。'
+- id: day11-c7
+  front: 不可回滚变更如何处置？expand / contract 四步是什么？
+  back: '把它拆成可回滚的步骤：① Expand 先加新列保持兼容；② Migrate 双写/回填；③ Switch 切读路径；④ Contract 确认无误后才删旧列。每步单独可回滚，把窗口拆散；配合 feature flag 比「重部署旧版本」更快。'
+- id: day11-c8
+  front: when 为 manual 的隐藏失败模式是什么？
+  back: 没人点这个 job，流水线依然显示「通过」，但环境停在旧版本——Day 1 的「假绿灯」在 CD 阶段重演。手动 job 只把执行变成显式动作，并不提供审批语义与追责记录。

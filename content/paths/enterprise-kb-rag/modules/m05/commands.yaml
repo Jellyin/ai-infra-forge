@@ -1,0 +1,10 @@
+- hint: 递归切分跑一版，先看块数（基线）
+  cmd: 'cat doc.md | python -c "import sys; from langchain_text_splitters import RecursiveCharacterTextSplitter as R; print(len(R(chunk_size=800, chunk_overlap=120).split_text(sys.stdin.read())))"'
+- hint: 固定其余参数，只扫 overlap（0/50/100/200），看块数与重复量如何变化
+  cmd: 'for ov in 0 50 100 200; do cat doc.md | python -c "import sys; from langchain_text_splitters import RecursiveCharacterTextSplitter as R; print(\"$ov\", len(R(chunk_size=800, chunk_overlap=$ov).split_text(sys.stdin.read())))"; done'
+- hint: 用 tokenizer 量正文 token 数，确认块长不超嵌入模型上限
+  cmd: 'cat doc.md | python -c "import sys, tiktoken; e=tiktoken.get_encoding(\"cl100k_base\"); print(\"tokens\", len(e.encode(sys.stdin.read())))"'
+- hint: 检查子块 payload 是否都写了 parent_id（缺的即父子关系不全）
+  cmd: 'jq -c ''select(.payload.parent_id|not)'' chunks.jsonl | head'
+- hint: 看块长的分布尾部，抓出异常超长块（多为未 atomic 的表格/代码）
+  cmd: 'jq -r ''.text|length'' chunks.jsonl | sort -n | tail -5'

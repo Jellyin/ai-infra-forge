@@ -1,0 +1,20 @@
+id: day14
+title: 渐进式发布与自动回滚
+goal: 让发布失败由指标判定，而不是由用户反馈发现
+order: 14
+track: 轨道 3 · CD：GitOps 与 ArgoCD
+read: 22
+lab: 35
+concepts:
+  - 滚动 / 蓝绿 / 金丝雀的适用场景与代价
+  - Argo Rollouts：Rollout CR、步骤化推进、暂停与加重
+  - 指标驱动分析：AnalysisTemplate 与 Prometheus 查询
+  - 自动回滚的判定阈值与误判防护
+  - 数据库变更与「向后兼容两阶段」发布
+  - 与 GitLab CI 的配合：谁触发、谁判定、谁回滚
+checklist:
+  - 能为一个服务选出发布策略并说明理由
+  - 能写出一个可用的 AnalysisTemplate
+  - 能解释自动回滚的误判风险与防护手段
+  - 能设计一次含数据库变更的兼容发布
+  - 能说清 CI 与 Rollouts 在发布流程中的分工

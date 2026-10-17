@@ -1,0 +1,10 @@
+- hint: 提交训练 Job
+  cmd: kubectl apply -f train-job.yaml
+- hint: 查看训练 Pod 及其所在节点（观察排队 vs 运行）
+  cmd: kubectl get pods -l job-name=llm-sft -o wide -w
+- hint: 跟踪训练日志（Pod 被杀前务必确认日志已外置）
+  cmd: kubectl logs -f job/llm-sft
+- hint: 查 Pod 为何 Pending（GPU 配额 / 亲和性 / 污点 / PVC）
+  cmd: kubectl describe pod -l job-name=llm-sft
+- hint: 把 checkpoint 目录打成 OCI 制品推到 registry
+  cmd: oras push registry.example.com/models/llm-sft:v3 ./checkpoint/

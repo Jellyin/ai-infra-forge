@@ -1,0 +1,10 @@
+- hint: '回退 Deployment 到上一版（回滚的核心命令）'
+  cmd: kubectl rollout undo deployment/payments-api
+- hint: '回退到指定 revision（先看 history 拿到编号）'
+  cmd: kubectl rollout undo deployment/payments-api --to-revision=3
+- hint: '查看 revision 历史，确认回滚目标'
+  cmd: kubectl rollout history deployment/payments-api
+- hint: 'Argo Rollouts 场景的回滚（需 kubectl argo rollouts 插件，随版本演进以官方文档为准）'
+  cmd: kubectl argo rollouts undo rollout/payments-api
+- hint: 'GitOps 场景回退到某个已同步的历史 revision（先 argocd app history 取编号）'
+  cmd: argocd app rollback payments-api <REVISION>

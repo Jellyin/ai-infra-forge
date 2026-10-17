@@ -1,6 +1,12 @@
 services:
   web:
-    build: .
+    build:
+      context: .
+      args:
+        # 基础镜像与 npm 源：默认国内镜像源，可在仓库根 .env 里覆盖
+        NODE_IMAGE: ${NODE_IMAGE:-docker.m.daocloud.io/library/node:22-alpine}
+        NGINX_IMAGE: ${NGINX_IMAGE:-docker.m.daocloud.io/library/nginx:alpine}
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
     image: ai-infra-forge:latest
     container_name: aiforge-web
     ports:

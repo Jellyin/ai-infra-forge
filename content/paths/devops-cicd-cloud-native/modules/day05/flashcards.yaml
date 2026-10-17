@@ -1,0 +1,24 @@
+- id: day05-c1
+  front: 治理流水线要看的五个关键指标是什么？各自坏掉说明什么？
+  back: '排队时长（queued_duration，与代码无关地飙升=资源供给问题）、执行时长（duration，与代码同步变慢=脚本/缓存问题）、失败率（长期偏高让「红」失去威慑）、重试率（retried 占比高=flaky 被重试掩盖）、缓存命中率（骤降会让所有 job 一起变慢）。分工：排队归运维、执行归开发；失败率与重试率归代码；缓存命中率归两者。'
+- id: day05-c2
+  front: 怎么用同一条流水线的数据区分「排队慢」和「执行慢」？
+  back: 'GitLab 的 job 对象同时给了 queued_duration 与 duration 两个字段：排队=job 创建到被 runner 认领，执行=runner 开始到 job 结束。把全部 job 的这两个数各自求和取占比即可判读。排队是 100% 的浪费，修复方向是加 runner/调并发/错峰；执行高则优化脚本、缓存、镜像与并行度。Actions 没有同名 API 字段，要用 run 创建时间与 job 开始时间自己算。'
+- id: day05-c3
+  front: 流水线的隐性存储账单从哪来？怎么控？
+  back: '两处：artifact 与 cache。不写 expire_in 就按实例默认保留期累积（常见 30 天，随配置/版本，以官方文档为准）；paths 写太宽（整个 dist/、node_modules/）体积翻十倍还拖慢下游下载。策略：MR 用 expire_in 1 day、主分支 1 week、tag/release 长一些，reports 单独设，并定期核对 Usage quotas 的用量。'
+- id: day05-c4
+  front: runner 的「挤兑」和「饥饿」有什么不同？各自怎么缓解？
+  back: '挤兑是瞬时需求尖峰：schedule 都排整点、全组同时 push、monorepo 触发上千 job，导致队列暴涨——缓解靠错峰 schedule、interruptible + 自动取消冗余流水线、resource_group 串行化共享资源。饥饿是结构性不公：少数 tag 绑定的 runner 被长期占用，其它项目永远排不上——缓解靠给重活单独 runner、按项目/组划分 runner、限并发占用。'
+- id: day05-c5
+  front: 'when: manual 的默认 allow_failure 是什么？陷阱在哪？'
+  back: '默认为 true，即手动 job 不阻断流水线。于是「没人点」的情况下流水线仍显示通过——这就是 Day 1 讲的假绿灯。要让手动步骤真正成为门禁（比如生产发布审批），必须显式写 allow_failure: false。'
+- id: day05-c6
+  front: 为什么多架构构建的成本必须按平台拆开归因？
+  back: '在 amd64 runner 上用 QEMU 模拟跑 arm64 时，CPU 密集型构建耗时常是原生的数倍；换原生 arm64 runner 快很多但单价更高。若不把构建拆成 matrix 独立 job（如 PLATFORM: [linux/amd64, linux/arm64]）并按平台分别统计时长与成本，「多架构到底贵多少」就是一笔糊涂账，也无法判断该买原生 arm64 还是继续模拟。'
+- id: day05-c7
+  front: 缓存命中率为什么不能只靠一个现成指标查到？
+  back: 'GitLab 与 Actions 都没有开箱即用的「缓存命中率」指标，要从 job 日志派生：GitLab 侧 grep「Checking cache for」与「Successfully extracted cache」，命中率取后者/前者；Actions 侧看 actions/cache 输出的「Cache restored from key」与「Cache not found」。所以缓存命中率属于「日志派生指标」，通常需要自己采集聚合。'
+- id: day05-c8
+  front: 想把「流水线慢」定位到具体阶段，按什么步骤做？
+  back: '① 按 stage 聚合 p50/p95 时长，找最占时间的 stage；② 算关键路径而不是最慢 job（并行 job 只计最慢那个，关键路径=依赖链时长之和）；③ 把每个 stage 的排队与执行分别排序；④ 二分法验证：把可疑 job 的 script 暂换成 echo——时长塌陷是脚本问题，仍旧很长则是排队、拉镜像或 artifacts 下载的问题。'

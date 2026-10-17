@@ -1,0 +1,20 @@
+id: day11
+title: 环境模型与晋升策略
+goal: 把「部署到哪、谁能上、什么时候上」变成规则而不是口头约定
+order: 11
+track: 轨道 3 · CD：GitOps 与 ArgoCD
+read: 18
+lab: 25
+concepts:
+  - 环境矩阵：dev / review / staging / prod 的职责划分
+  - 分支策略取舍：trunk-based 与 Git 分支流的真实成本
+  - GitLab environments 与 Actions environments 的能力对照
+  - 手动门禁、审批、受保护环境与受保护分支
+  - 环境隔离：数据、凭证、网络的最小隔离集
+  - 回滚窗口与「不可回滚变更」的处理
+checklist:
+  - 能画出本项目的环境矩阵与晋升路径
+  - 能说明所选分支策略的代价与适用条件
+  - 能配置受保护环境与审批人
+  - 能定义哪些变更是不可回滚的以及如何处置
+  - 能给出每个环境的隔离清单

@@ -1,0 +1,8 @@
+- hint: 渲染 overlay 并与集群现状做 diff 预览（合并前的证据）
+  cmd: kustomize build overlays/prod | kubectl diff -f -
+- hint: 服务端 dry-run 校验清单能否被 API 接受（抓字段与类型错误）
+  cmd: kubectl apply --dry-run=server -f manifests/
+- hint: 渲染 Helm chart 看最终清单（避免模板渲染出空文档）
+  cmd: helm template ./chart --values values-prod.yaml
+- hint: 用 schema 校验叠加后的清单（需安装 kubeconform）
+  cmd: kubeconform -strict -summary overlays/prod/

@@ -1,0 +1,10 @@
+- hint: 一条命令双架构构建并推送，产出 manifest list
+  cmd: docker buildx build --platform linux/amd64,linux/arm64 -t $REG/app:1.0.0 --push .
+- hint: 查看一个 tag 背后的多架构 index（各平台与其 digest）
+  cmd: docker buildx imagetools inspect $REG/app:1.0.0
+- hint: 把两个单架构镜像合并成一个 index（不重新构建）
+  cmd: docker buildx imagetools create -t $REG/app:1.0.0 $REG/app:1.0.0-amd64 $REG/app:1.0.0-arm64
+- hint: 取出顶层 index digest（用于晋升与回滚引用）
+  cmd: docker buildx imagetools inspect $REG/app:1.0.0 --format '{{json .Manifest.Digest}}'
+- hint: 注册 QEMU binfmt，使单机可构建/运行 arm64（需 privileged）
+  cmd: docker run --privileged --rm tonistiigi/binfmt --install all

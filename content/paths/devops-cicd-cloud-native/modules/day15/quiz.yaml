@@ -1,0 +1,12 @@
+- id: day15-q1
+  q: 3 个环境、一套清单。什么情况下你会选 Helm 而不是 Kustomize？
+  a: 当「一套模板要产出差异很大的多套清单」时选 Helm，例如对外发布为通用 chart、有大量开关、环境组合多到 patch 表达不了。反之，只是同一套 base 微调几处环境差异时，Kustomize 更简单、输出更接近最终 YAML、更好审查。
+- id: day15-q2
+  q: 有人把 image tag 直接 commit 回主分支，这条流程最大的风险是什么？怎么补？
+  a: '风险是「自动改 Git」变成「自动把坏清单合并进集群」，且用 tag 而非 digest 时会漂移。补法：① 镜像用 digest 钉死；② 主分支保护 + 变更必过 schema 与策略检查；③ 合并前用 kubectl diff 给出人工确认；④ 让改动只有单一入口，可审计。'
+- id: day15-q3
+  q: 把「依赖数据库的健康检查」放进 livenessProbe 为什么会雪崩？
+  a: liveness 失败的后果是重启容器。若探针接口查 DB，DB 一抖动所有副本 liveness 同时失败、全部 Pod 被重启；重启期间依赖还没恢复、新 Pod 又失败，形成重启风暴。依赖检查应放 readinessProbe（只摘流量不重启）。
+- id: day15-q4
+  q: 合并清单前你会用哪几道防线？各抓什么？
+  a: '四道：① schema 校验（kubeconform、--dry-run=server）抓字段拼写/类型；② 策略检查（Kyverno、kube-score）抓缺 limits、用 latest 等「合法但不该做」；③ dry-run 渲染（helm template、kustomize build）防渲染出空文档；④ diff 预览（kubectl diff）给出集群会怎么变，供人工确认。'

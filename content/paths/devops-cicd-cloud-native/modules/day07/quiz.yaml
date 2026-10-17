@@ -1,0 +1,12 @@
+- id: day07-q1
+  q: 团队要在 CI 里同时产出 amd64 和 arm64 镜像。什么情况下选 QEMU 单机构建，什么情况下上原生 arm64 runner？
+  a: 选 QEMU 单机：小镜像、解释型语言、依赖编译少的场景，或只是要一个正确的 index 而不在意 wall-clock；单机装一次 binfmt 即可，无第二个节点。上原生 arm64 runner：编译密集型（Rust/C++/重依赖）或大镜像，QEMU 慢 5–20× 会拖垮流水线；此时用 GitLab parallel:matrix / GitHub strategy.matrix 扇出到两种架构的 runner 并行构建，再合并 manifest。二者可混用：Go 用交叉编译绕开 QEMU，其余走原生。
+- id: day07-q2
+  q: 一个 tag 背后是 amd64 和 arm64 两个镜像。发布时为什么要引用 index digest 而不是其中某个架构的 digest？
+  a: 因为单架构 digest 只指向其中一个架构。用它发布，另一个架构的节点会拉到不匹配的镜像或直接失败，导致「一台上、一台不上」。index digest 是顶层清单的 digest，覆盖所有平台，一次发布/回滚同时作用于两个架构。多架构制品的晋升与回滚必须按 index digest 固定，如 app@sha256:<index digest>。
+- id: day07-q3
+  q: 双架构发布时，CI 里只对 amd64 跑集成测试有什么风险？至少要补什么？
+  a: 风险是 arm64 那份镜像从未被真正执行过——测的与上的是两个二进制，属于双架构版的「假绿灯」。至少补：① 架构断言（--platform linux/arm64 运行时 uname -m 应为 aarch64，防止误测模拟层）；② 在 arm64 上真跑服务的冒烟测试，重点覆盖本地扩展、.so、node-gyp、SIMD/AVX 类代码；③ 用 imagetools inspect 断言 index 两平台齐全；④ 确认晋升所用 digest 与实际拉取一致。
+- id: day07-q4
+  q: 用 docker buildx build --platform linux/amd64,linux/arm64 --load 报「does not support exporting manifest lists」，为什么？怎么改？
+  a: 因为多平台产出的是 manifest list / OCI index，本地 docker 镜像存储无法表示「一个 tag 对应多架构」，docker exporter 不支持导出 manifest list。改法：去掉 --load，用 --push 推到 registry（推荐），或 --output type=oci,dest=image.tar 导出 OCI 布局。--load 只能加载单一平台镜像。

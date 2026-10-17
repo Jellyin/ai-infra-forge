@@ -1,0 +1,10 @@
+- hint: 提交 Argo Workflow 并实时跟踪
+  cmd: argo submit -n argo pipeline.yaml --watch
+- hint: 查看某个 Workflow 产生的 Pod（判断依赖顺序）
+  cmd: 'kubectl get pods -n argo -l workflows.argoproj.io/workflow=sft-pipeline-xxxxx'
+- hint: 查看分布式训练作业状态（需已装 Kubeflow Training Operator，无该 CRD 则不适用）
+  cmd: kubectl get pytorchjob -n ml
+- hint: 把模型目录推成 OCI 制品并拿到 digest
+  cmd: oras push registry.example.com/models/llm-sft:v3 ./model/
+- hint: 从模型注册表按别名起一个本地推理服务做冒烟
+  cmd: mlflow models serve -m models:/llm-sft@champion -p 5001

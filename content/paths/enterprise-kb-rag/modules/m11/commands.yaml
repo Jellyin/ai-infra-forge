@@ -1,0 +1,10 @@
+- hint: 抽出回答里出现的所有引用编号（去重），与证据集比对查越界
+  cmd: 'grep -oE "\[\[[0-9]+\]\]" answer.txt | sort -u'
+- hint: 统计某次回答是否触发拒答标记
+  cmd: 'grep -c "INSUFFICIENT_EVIDENCE" answer.txt'
+- hint: 起 OpenAI 兼容端点，用于「给定证据、校验生成」实验
+  cmd: python -m vllm.entrypoints.openai.api_server --model Qwen/Qwen2.5-7B-Instruct --served-model-name qwen7b --port 8000
+- hint: 用 python 一行跑越界引用检测（证据集为 1..3）
+  cmd: 'python3 -c "import re;ans=open(\"answer.txt\").read();c=set(map(int,re.findall(r\"\[\[(\d+)\]\]\",ans)));print(\"越界:\",sorted(c-{1,2,3}) or None)"'
+- hint: 批量统计一个目录下所有回答的引用覆盖率（有引用的行 / 总行，按需改判据）
+  cmd: 'grep -cE "\[\[[0-9]+\]\]" answers/*.txt | awk -F: "{s+=\$2;n++} END{print s\"/\"n}"'

@@ -1,0 +1,21 @@
+- id: day01-c1
+  front: 一次 push 之后，从事件到 job 执行完，要经过哪几层？
+  back: 事件触发 → workflow:rules 决定是否创建 pipeline → 拆成 stage → stage 内 job 并行 → runner 按 tags 匹配并排队认领 → executor 执行 script → 产出 artifacts/cache 报告。四层是 pipeline / stage / job / runner，混在一起谈会得出错误结论。
+- id: day01-c2
+  front: glrt- 开头的 token 和 CI_JOB_TOKEN 分别是什么？谁在用？
+  back: glrt- 是 Runner authentication token，归 Runner 进程所有，用于注册与认领 job；CI_JOB_TOKEN 是每个 job 自动注入的短期 token，用于访问 GitLab 自身资源（Registry 推拉、触发下游 pipeline）。前者不是给 job 用的，后者不要当长期凭证存起来。
+- id: day01-c3
+  front: needs 相比 stage 顺序执行，收益是什么？代价是什么？
+  back: 收益是绕开 stage 栅栏、按真实依赖启动，缩短关键路径（尤其配合 fan-out/fan-in）。代价是形成显式依赖图，依赖写错会静默少跑或早跑——比直接失败更危险。
+- id: day01-c4
+  front: workflow:rules 和 job 的 rules 有什么区别？
+  back: workflow:rules 决定整个 pipeline 创不创建；job 的 rules 只决定单个 job 跑不跑。没有 workflow:rules 时，任何分支的任何 push 都会拉起全套 job。别再混用已废弃的 only/except。
+- id: day01-c5
+  front: 「缓存假命中」是怎么产生的？怎么防？
+  back: 'cache key 不含依赖锁文件哈希时，依赖变了缓存却仍命中，测试跑在过期依赖上。防法：key 用 files 指向锁文件，或用「分支 + 锁文件哈希 + 工具链版本」组合，并在依赖相关 job 上定期验证缓存是否真的会失效。'
+- id: day01-c6
+  front: 为什么 `cmd | tee log` 会让失败变成成功？
+  back: 管道的退出码取最后一个命令（tee）的，而不是 cmd 的。构建失败时脚本仍以 0 退出。需要 set -o pipefail，让管道中任一环失败即整体失败。
+- id: day01-c7
+  front: 列出三种「不发红但等于没测」的写法？
+  back: '① allow_failure 设为 true 吞掉失败；② when 为 manual 时没人点就永远不执行；③ 测试选择器写错匹配到 0 个用例（退出码 0）。共同点：不会变红，只是不再声称测过。'

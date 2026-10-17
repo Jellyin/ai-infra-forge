@@ -1,0 +1,24 @@
+- id: day18-c1
+  front: vLLM 与 KServe 的职责边界怎么分？
+  back: 'vLLM 是推理引擎：加载权重、continuous batching、PagedAttention/KV Cache 管理、OpenAI 兼容 HTTP、导出 Prometheus 指标。KServe 是服务编排层：InferenceService CRD、predictor/transformer 拓扑、revision 管理、流量切分（canaryTrafficPercent）、自动伸缩、协议 v1/v2。判据：模型怎么算→引擎；怎么部署/路由/伸缩/灰度→编排层。'
+- id: day18-c2
+  front: 为什么 CPU 利用率不是推理服务的正确伸缩指标？
+  back: '推理瓶颈在 GPU 的排队与 KV Cache，不在 CPU。Decode 阶段是显存带宽密集，GPU 打满时 CPU 可能只有 20%——按 CPU 扩容毫无动作，队列继续堆积；Prefill/分词忙时 CPU 高但 GPU 未必满，按 CPU 扩容会误扩容，浪费最贵的资源。'
+- id: day18-c3
+  front: 推理弹性的正确指标有哪些？
+  back: '队列长度 vllm:num_requests_waiting（领先指标，扩容首选）、正在处理的 vllm:num_requests_running、KV Cache 使用率 vllm:kv_cache_usage_perc（接近 1 说明显存吃紧；旧版名为 gpu_cache_usage_perc，v1 引擎已改名）、TTFT 直方图、TPOT 直方图。用 HPA external metrics（Prometheus adapter）或 KEDA prometheus scaler 按队列/TTFT 扩容。指标名随版本变，用 curl 自己的 /metrics 核对。'
+- id: day18-c4
+  front: TTFT 和总延迟是什么关系？为什么不能混为一谈？
+  back: '一次请求总耗时 ≈ 排队等待 + TTFT + TPOT × 生成 token 数。TTFT 只含「发请求到第一个 token」，不含后续逐 token 生成。首字延迟是流式体验的核心，可能在总延迟变化不明显时单独退化，所以必须分开看 TTFT 与 TPOT。'
+- id: day18-c5
+  front: 多架构推理里「调度成功但容器起不来」是怎么回事？
+  back: '集群可能同时有 arm64（Graviton/Ampere）与 amd64 GPU 节点。若镜像是单架构却落到不匹配的节点，容器起不来：exec format error，Pod 表现为 CreateContainerError 或 CrashLoopBackOff。kube-scheduler 不会因镜像架构不匹配而拒绝调度。对策：镜像做多架构 manifest，或让 nodeSelector/亲和性与镜像架构对齐（kubernetes.io/arch）。训练镜像同理。'
+- id: day18-c6
+  front: 模型换版的金丝雀，判据该用哪些指标？
+  back: '推理专属指标：5xx 错误率、TTFT P95、TPOT P95，另加业务侧输出质量抽样。机制：KServe canaryTrafficPercent 或 Argo Rollouts steps（setWeight + pause + analysis），AnalysisTemplate 查 Prometheus，超阈值自动回滚。'
+- id: day18-c7
+  front: 推理成本优化清单，说出至少四条？
+  back: '① 量化（INT8/FP8/INT4）降权重与 KV Cache 显存；② 调 max_num_seqs/max_model_len 匹配显存与 SLA；③ 前缀缓存复用共享前缀的 KV block；④ arm64 CPU 节点跑 CPU 推理、GPU 节点跑 GPU 推理，镜像架构匹配；⑤ 按队列/TTFT 弹性而非 CPU；⑥ 在线/离线分区，用不同批处理参数。'
+- id: day18-c8
+  front: 从模型制品到线上服务的完整路径是怎样的？
+  back: 'CI 产出 digest 化的模型制品（storageUri 的 sha256 或镜像 digest）并提交清单 → ArgoCD 从 Git 同步到集群（Git 是唯一事实源）→ Rollouts 按 steps 逐步放量 → AnalysisTemplate 查 TTFT/错误率，不达标自动回滚。模型换版=改清单里的 digest，而不是手工 kubectl set image。'

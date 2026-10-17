@@ -1,0 +1,20 @@
+id: day17
+title: 训练编排与模型制品化
+goal: 把训练变成可调度、可重试、可追溯的流水线作业
+order: 17
+track: 轨道 4 · AI 训练与推理交付
+read: 22
+lab: 35
+concepts:
+  - K8s 上的训练：Job、自定义算子与 gang scheduling
+  - Argo Workflows / Kubeflow Pipelines / Volcano 的定位差异
+  - 数据与 checkpoint 的存储选型
+  - 抢占、重试与失败恢复的编排方式
+  - 模型制品：从实验产物到一等制品（MLflow / OCI 制品）
+  - 评估作为门禁：离线指标如何变成 CI 的通过条件
+checklist:
+  - 能为一个训练任务选出编排方案并说明理由
+  - 能设计一条含数据准备→训练→评估的流水线
+  - 能把模型产出成可被引用的制品
+  - 能把评估指标接入流水线门禁
+  - 能处理训练被抢占后的恢复路径

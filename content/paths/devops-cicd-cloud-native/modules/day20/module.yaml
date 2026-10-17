@@ -1,0 +1,20 @@
+id: day20
+title: 可观测与 SLO 落到交付门禁
+goal: 把「可不可以发」变成可计算的判断
+order: 20
+track: 轨道 5 · 平台化与生产就绪
+read: 20
+lab: 30
+concepts:
+  - OpenTelemetry：指标/日志/追踪的统一接入
+  - Prometheus 与 Grafana：从采集到可用看板
+  - SLI/SLO/错误预算的定义与选取
+  - burn rate 与发布门禁：发布前查错误预算
+  - 告警分级与「告警疲劳」治理
+  - 从告警到复盘：事件管理与行动项闭环
+checklist:
+  - 能为一个服务定出 SLI/SLO 与错误预算
+  - 能用 burn rate 做发布前的自动门禁
+  - 能设计分级告警并抑制噪声
+  - 能说清 OTel 在交付链路里接在哪
+  - 能主持一次不追责复盘的准备

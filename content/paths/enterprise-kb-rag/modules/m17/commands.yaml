@@ -1,0 +1,10 @@
+- hint: 验证流式接口（先 citation 后 token，最后 done 带 usage 与 trace_id）
+  cmd: 'curl -N -sS http://localhost:8000/v1/qa -H "Content-Type: application/json" -H "X-Tenant-Id: acme" -d ''{"tenant_id":"acme","user_id":"u1","query":"如何申请延期","stream":true}'''
+- hint: 非流式调用并只看引用与用量字段
+  cmd: 'curl -sS http://localhost:8000/v1/qa -H "Content-Type: application/json" -d ''{"tenant_id":"acme","user_id":"u1","query":"M4 评审定的超时是多少","stream":false}'' | jq ''{answer, citations, usage, trace_id}'''
+- hint: 本地起一个 OpenAI 兼容的推理服务（含前缀缓存，压首字延迟）
+  cmd: docker run --rm --gpus all -p 8000:8000 vllm/vllm-openai:latest --model Qwen/Qwen2.5-1.5B-Instruct --max-num-seqs 32 --enable-prefix-caching
+- hint: 并发压测，观察 TTFT 与队列等待随并发如何变化
+  cmd: 'hey -z 60s -c 32 -m POST -T application/json -d ''{"tenant_id":"bench","user_id":"u","query":"ping"}'' http://localhost:8000/v1/qa'
+- hint: 直接从 Prometheus HTTP API 查 P95 分环节首字延迟（指标名按你的埋点替换）
+  cmd: 'curl -sG http://localhost:9090/api/v1/query --data-urlencode ''query=histogram_quantile(0.95, sum by (le, stage) (rate(qa_stage_duration_seconds_bucket[5m])))'' | jq ''.data.result'''

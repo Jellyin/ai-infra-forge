@@ -1,19 +1,16 @@
-import { useState, useMemo } from "react";
-import type { PathContent } from "@aiforge/content-schema";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
+import type { PathMeta } from "@aiforge/content-schema";
 import { buildCardQueue, newCardState, sm2Next, cardMastery } from "@aiforge/logic";
 import type { CardState, Grade } from "@aiforge/logic";
 import { cardKey } from "../lib/keys.ts";
+import { DAILY_NEW_LIMIT } from "../hooks/useProgress.ts";
 import type { useProgress } from "../hooks/useProgress.ts";
 
 type Progress = ReturnType<typeof useProgress>;
 
 interface FlatCard { key: string; front: string; back: string; moduleTitle: string }
 
-/** 每日新卡上限（Anki 式日节奏：防首日洪水，评审 P0-2）。真·按天限额由
- *  useProgress 的 newCardsByDay 持久化计数实现，此处常量只定义上限值。 */
-const DAILY_NEW_LIMIT = 5;
-
-export default function Flashcards({ path, progress }: { path: PathContent; progress: Progress }) {
+function Flashcards({ path, progress, onGoTab }: { path: PathMeta; progress: Progress; onGoTab?: (tab: string) => void }) {
   const { cards, gradeCard, todayNewCardCount, recordNewCard, undoNewCard } = progress;
   const [flipped, setFlipped] = useState(false);
   /** 供撤销上一评（评审 P1-4） */
@@ -40,6 +37,12 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
   const state: CardState = { ...newCardState(), ...(card ? cards[card.key] : undefined) };
   /** 当前卡是否为今天首次引入的新卡（需要计入每日额度） */
   const isNewCard = state.reps === 0 && state.interval === 0 && state.due === 0;
+
+  /* 评分后评分按钮立刻变 disabled，浏览器把焦点丢回 body；换卡时把焦点送回卡片，
+     否则键盘用户每评一张都要重新 Tab 穿过统计块，1/2/3 快捷键也无法连续使用。
+     （卡片在隐藏 tab 里时 focus() 是无操作，不会抢焦点。） */
+  const cardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { cardRef.current?.focus(); }, [card?.key]);
 
   const grade = (g: Grade) => {
     if (!card) return;
@@ -72,6 +75,13 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
 
   return (
     <>
+      {/* 区块标题：读屏的标题导航需要一个锚点，此前整页没有 h1/h2/h3 */}
+      <h2 className="card__title">闪卡复习</h2>
+      <p className="card__subtitle" style={{ marginTop: "calc(var(--space-2) * -1)" }}>
+        SM-2 间隔重复：翻面后自评「不认识 / 模糊 / 认识」，系统按遗忘曲线安排下次复习。
+        每日最多引入 {DAILY_NEW_LIMIT} 张新卡。
+      </p>
+
       <div className="stat-grid" style={{ marginBottom: "var(--space-4)" }}>
         <div className="stat-tile"><div className="stat-tile__value">{remaining}</div><div className="stat-tile__label">本次剩余</div></div>
         <div className="stat-tile"><div className="stat-tile__value" style={{ color: "var(--status-good)" }}>{masteryCount.good}</div><div className="stat-tile__label">已掌握</div></div>
@@ -85,13 +95,23 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
             const next = flat.map((c) => cards[c.key]?.due).filter((d): d is number => d != null && d > Date.now()).sort((a, b) => a - b)[0];
             return next ? new Date(next).toLocaleString("zh-CN") : "暂无";
           })()}
-        </p></div>
+        </p>
+          {/* 空状态不能是死胡同：给出继续学习的出口 */}
+          {onGoTab && (
+            <div style={{ display: "flex", gap: "var(--space-2)", justifyContent: "center" }}>
+              <button className="btn" onClick={() => onGoTab("commands")}>去练命令</button>
+              <button className="btn btn--primary" onClick={() => onGoTab("path")}>回到学习路径</button>
+            </div>
+          )}
+        </div>
       ) : card ? (
         <>
           <div className="flashcard-stage">
             <div className={`flashcard ${flipped ? "flashcard--flipped" : ""}`}
+              ref={cardRef}
               onClick={() => setFlipped(!flipped)}
               role="button" tabIndex={0}
+              aria-keyshortcuts="Enter Space 1 2 3"
               aria-label={flipped
                 ? `闪卡。答案：${card.back}`
                 : `闪卡。问题：${card.front}。点击或按 Enter 翻面看答案`}
@@ -142,3 +162,6 @@ export default function Flashcards({ path, progress }: { path: PathContent; prog
     </>
   );
 }
+
+/* 五个 tab 常驻挂载：memo 配合 App 里的稳定回调，切 tab 时只重渲染目标面板 */
+export default memo(Flashcards);

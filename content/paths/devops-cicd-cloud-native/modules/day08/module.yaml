@@ -1,0 +1,20 @@
+id: day08
+title: 制品仓库与版本晋升策略
+goal: 同一份制品从 dev 走到 prod，中间不许再构建一次
+order: 8
+track: 轨道 2 · 制品与供应链
+read: 20
+lab: 30
+concepts:
+  - registry 布局：项目/环境/组件如何分仓
+  - 不可变 tag 与 digest：为什么 tag 会骗人
+  - 语义化版本、release 与 changelog 的自动生成
+  - 制品晋升：dev → staging → prod 用同一个 digest（多架构用 index digest）
+  - 禁止「重新构建一次」的理由与检测方法
+  - 保留策略、清理与仓库容量治理
+checklist:
+  - 能解释 digest 与 tag 的区别及为何晋升必须按 digest
+  - 能设计一套不可变 tag 命名规则
+  - 能配置自动 changelog 与 release 流程
+  - 能检测并阻止「为生产重新构建」的漂移
+  - 能给出仓库清理与保留策略

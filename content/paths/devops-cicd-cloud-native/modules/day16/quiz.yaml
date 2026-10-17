@@ -1,0 +1,12 @@
+- id: day16-q1
+  q: 训练 Job 长时间停在 Pending，该判失败还是等待？为什么？
+  a: '应当等待，把它当「排队」而非失败。GPU 是不可超卖的扩展资源，提交≠开始，Pending 通常是无空闲 GPU 或配额已满。但要区分「排队 Pending」和「卡在配置错误」（nodeSelector/taint 不匹配、镜像拉不下来、PVC 未绑定）——后者查 kubectl describe pod 的 Events。绝不可用会把 Pending 判死的短超时。'
+- id: day16-q2
+  q: 一次训练「跑成功」但无法复现，先查哪三处？
+  a: '按概率查：① 数据是否被就地覆盖且没记录版本（缺数据集 manifest/哈希）；② 是否用了浮动 tag 而非 digest 镜像；③ 随机种子是否固定（含数据加载顺序）。若三者都没问题，再查框架算子的非确定性实现是否需开确定性模式。'
+- id: day16-q3
+  q: 只存模型权重的 checkpoint，续训后会出什么问题？
+  a: '会丢优化器状态（如 Adam 动量/二阶矩），续训后 loss 跳变；还会丢 LR 调度器状态与 global step、以及 dataloader/RNG 状态，导致数据顺序与随机性改变。精确续训需要权重 + 优化器状态 + 调度器/step + 各 RNG 状态 + 训练配置与代码 SHA。'
+- id: day16-q4
+  q: 为什么训练镜像要固定到 digest 而不是 tag？
+  a: 'tag 可被重新指向（同一 tag 今天是 A 明天是 B），digest 是内容寻址的精确坐标，保证「这次训练用的就是这版环境」。配合代码 SHA、数据集 manifest 才有可复现性。此外镜像架构与 CUDA 版本还要与目标节点匹配，否则调度成功但容器起不来。'

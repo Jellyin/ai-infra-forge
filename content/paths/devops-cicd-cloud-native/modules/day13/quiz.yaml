@@ -1,0 +1,12 @@
+- id: day13-q1
+  q: App-of-Apps 和 ApplicationSet 的边界在哪？什么时候该从前者换成后者？
+  a: 'App-of-Apps 是一个父 Application 指向一个放满子 Application 的目录，适合少量应用、一眼看全，但父子强耦合、扩环境要复制。ApplicationSet 用 generator 程序化生成，适合多环境/多集群、目录即矩阵。“应用数 × 环境数”一旦不能用手指数清，就该换成 ApplicationSet。'
+- id: day13-q2
+  q: 数据库迁移任务该用 sync-wave 还是 hook？为什么？
+  a: '用 hook（PreSync），而不是 sync-wave。迁移是一次性任务，放进 Deployment 的 initContainer 会随每次扩容重跑；hook 失败会阻断整个 sync，天然保证“迁移没过、应用不上”；还要配 hook-delete-policy 清理 Job 并保证脚本幂等。sync-wave 只提供“大致分阶段顺序”，不保证一次性任务只跑一次。'
+- id: day13-q3
+  q: 选密钥进集群方案时，要先回答哪四个问题？
+  a: '① 密钥的真源在哪（Git / 云 Secret Manager / Vault）？② 是否多集群？③ 需要自动轮换吗？④ 能否接受密文进 Git？据此选：真源在云/Vault 且多集群 → External Secrets；单集群想全 Git 化 → Sealed Secrets；要动态短租期凭证 → Vault 集成。'
+- id: day13-q4
+  q: 要回答「谁在什么时候同步了什么」，需要哪两层记录？各回答什么？
+  a: '① Git 历史回答“期望为什么变”——谁改了声明、何时、diff 是什么；② ArgoCD 的 status.operationState（与 API server 审计日志）回答“同步是谁触发的”——谁发起同步/回滚、用哪个 revision、何时、结果如何。Git 管期望的变更，ArgoCD 管同步的触发，缺任何一半都难以复盘。'

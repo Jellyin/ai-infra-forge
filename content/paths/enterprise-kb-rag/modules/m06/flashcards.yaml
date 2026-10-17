@@ -1,0 +1,24 @@
+- id: m06-c1
+  front: 向量做了 L2 归一化后，cosine 与 dot 是什么关系？
+  back: 归一化（单位向量）后二者等价，给出的排序完全一致；L2 距离也与它们单调对应（||u-v||² = 2 - 2·cos）。所以归一化后可以用 dot 走最快路径。反之若未归一化，dot 会被向量模长污染，此时应显式用 cosine。
+- id: m06-c2
+  front: L2（欧氏）距离什么时候才适用？
+  back: 当向量模长本身携带信息时才适用。文本 embedding 通常不满足这个条件——若对文本向量用 L2 又没有归一化，方向相近但模长差异会主导排序，这是最常见的暗坑之一。
+- id: m06-c3
+  front: HNSW 的 m 与 ef_construct 各控制什么？查询期的 ef 又是什么？
+  back: m 是每个节点的连边数（越大召回与内存越高、构建越慢）；ef_construct 是建索引时的候选队列长度（越大索引质量越高、构建越慢，且不影响查询速度）；查询期的 ef（如 Qdrant 的 hnsw_ef）是运行时旋钮，调大只增加单次查询的召回与延迟、不改索引，是线上调召回的首选。
+- id: m06-c4
+  front: 为什么换 embedding 模型必须全量重建索引？
+  back: 不同模型的向量不在同一空间，跨模型比距离没有意义，维度不同还会直接报错；即便维度相同，换版本或改归一化也会改变向量空间。因此必须建新集合、用新模型重灌全部块、重跑召回基线、切流量，并保留旧集合作回滚，绝不能新旧向量混装。
+- id: m06-c5
+  front: Qdrant / Milvus / pgvector 的选型边界是什么？
+  back: 已有 Postgres 且块数在百万级内，优先 pgvector（省一整套运维）；需要复杂元数据过滤且过滤后仍要高召回，Qdrant 的 filter 体验更顺；数据到亿级、要独立扩缩容与多副本，才上 Milvus（运维最重）。共同前提是把「过滤 vs 召回」的取舍写进 ADR 并实测。
+- id: m06-c6
+  front: 建集合时把 size（向量维度）写错会怎样？
+  back: 若 size 与 embedding 的实际输出维度不一致，写入会因维度不匹配直接失败。这是最常见的低级错误之一，正确做法是建集合后先写一条数据试通，再批量灌入。
+- id: m06-c7
+  front: pgvector 的 ivfflat 与 hnsw 各有哪些关键参数？
+  back: ivfflat 建索引用 WITH (lists = N)，查询前 SET ivfflat.probes = P（probes 越大召回越高也越慢）；hnsw 用 WITH (m = 16, ef_construction = 128)，查询前 SET hnsw.ef_search = E。ops 类决定度量：vector_cosine_ops / vector_l2_ops / vector_ip_ops。
+- id: m06-c8
+  front: HNSW 索引的内存大概怎么估算？
+  back: 常数内存 ≈ 块数 × 维度 × 4 字节（float32），再加图结构开销（粗略按每点 m × 2 条边估），并留 1.5–2 倍余量给副本与查询峰值。例：100 万块 × 1024 维 ≈ 3.9 GB 向量本体。放不下就先考虑降维或标量量化。

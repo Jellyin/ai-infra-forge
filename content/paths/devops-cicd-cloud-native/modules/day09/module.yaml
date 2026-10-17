@@ -1,0 +1,20 @@
+id: day09
+title: SBOM、SLSA 与签名验签
+goal: 让「这个镜像确实是我这条流水线构建的」可被机器验证
+order: 9
+track: 轨道 2 · 制品与供应链
+read: 22
+lab: 35
+concepts:
+  - SBOM：CycloneDX / SPDX，生成时机与存放位置
+  - SLSA 分级：各级保证什么，你的项目该到几级
+  - 构建 provenance：attestation 的生成与内容
+  - 签名：cosign keyless（OIDC/Fulcio/Rekor）与密钥签名
+  - 准入端验签：Kyverno / OPA Gatekeeper 拒绝未签名镜像
+  - 多架构镜像的签名与验签（对 index 签还是对单架构签）
+checklist:
+  - 能生成并归档一份 SBOM 并说明谁会用
+  - 能为本项目定出 SLSA 目标级别与理由
+  - 能完成一次 keyless 签名并在集群侧验签通过
+  - 能配置准入策略拒绝未签名/来源不符的镜像
+  - 能说明验签失败时的运维处置流程

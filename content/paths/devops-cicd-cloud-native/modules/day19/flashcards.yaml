@@ -1,0 +1,24 @@
+- id: day19-c1
+  front: 「每个团队照抄一份流水线 YAML」为什么不可持续？平台工程的目标是什么？
+  back: 20 个团队产出 20 条各不相同的流水线，缓存 key、构建器、扫描、凭证全都不一致，平台团队沦为修 YAML 的客服。目标不是「统一」，而是把最佳实践变成默认值——golden path（黄金路径）。判据：新团队从 0 到第一次绿色部署要多久、写几行 YAML。
+- id: day19-c2
+  front: GitLab CI Component 与 GitHub reusable workflow 怎么对应？
+  back: '定义入口：spec:inputs ↔ on: workflow_call；调用：include: - component: ...@版本 ↔ jobs.<id>.uses: ...@版本；传参：inputs／$[[ inputs.x ]] ↔ with／inputs.x；传密钥：variables/secrets ↔ secrets:。两者结构同构，发版都按被引用方的 tag/ref 解析。'
+- id: day19-c3
+  front: 抽象的可复用模板，粒度该定在哪一层？
+  back: '抽象「能力」而不是「某个团队整条流水线」。一个组件只做一件有清晰契约的事（构建推送镜像、跑测试、扫描、签名、部署），输入数量应能一只手数过来；超过说明它做了不止一件事。'
+- id: day19-c4
+  front: 什么是「合法差异」和「伪差异」？伪差异怎么处理？
+  back: 合法差异是每个团队真的不同（镜像名、Dockerfile 路径、目标环境），该做成 inputs。伪差异是只服务某一个团队的开关，那不是参数，是分叉（fork）——应拒绝加输入，让该团队从 golden path 分叉并自担维护成本。
+- id: day19-c5
+  front: 模板为什么要版本化？为什么禁止引用 @main？
+  back: 模板是产品，必须先发版再被消费。语义化版本：不兼容变更=major、新增可选输入=minor、修 bug=patch。引用 @main 等于让全体团队共享一个随时会变的历史，平台一次提交即可让所有仓库同时失败，爆炸半径=全公司。
+- id: day19-c6
+  front: 模板的「弃用四步」是什么？
+  back: ① 公告（changelog+通知）→ ② 软警告（组件里 echo 警告、门户标黄）→ ③ 硬失败（引用旧版本 job fail，并给出升级命令）→ ④ 移除。全程至少留一个版本周期，并同时维护 N-1/N-2 供消费方排期升级。
+- id: day19-c7
+  front: Backstage 这类内部开发者门户解决什么？它是不是 CI 引擎？
+  back: 不是 CI 引擎。它解决三件事：可发现性（服务是谁的、在哪、流水线/看板在哪，software catalog）；脚手架（一键生成仓库+流水线+GitOps 应用+看板，生成物天然走 golden path）；资产收敛（TechDocs、运维手册随服务走）。门户管「找到并做对」，组件管「做对的事怎么写」。
+- id: day19-c8
+  front: 平台自身的 SLO 该怎么定？为什么 SLI 必须排除用户代码错误？
+  back: 候选 SLI：流水线成功率（排除用户代码错误后）、排队时间 p95、平台归因失败率。SLI 必须排除「用户代码本来就编译不过」的失败，否则指标淹没在噪声里、失去行动力。错误预算烧尽时冻结的是平台自身变更，而不是团队发布。

@@ -1,0 +1,10 @@
+- hint: 查看推理服务（KServe InferenceService）状态与就绪副本
+  cmd: kubectl get isvc -n serving
+- hint: 探活 OpenAI 兼容端点（确认服务与模型都已加载）
+  cmd: curl -s http://llm-svc.serving:8000/v1/models
+- hint: 查推理特有的队列长度与 KV Cache 使用率（Prometheus 查询）
+  cmd: 'curl -s --get --data-urlencode "query=vllm:num_requests_waiting" http://prometheus.monitoring:9090/api/v1/query'
+- hint: 查看 Rollout 的灰度进度与当前权重
+  cmd: kubectl argo rollouts get rollout llm-svc -n serving
+- hint: 手动放量到下一步（或触发回滚）
+  cmd: kubectl argo rollouts promote llm-svc -n serving

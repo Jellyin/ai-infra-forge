@@ -1,0 +1,10 @@
+- hint: 汇总点踩事件，按 query_id 回连（分母是全量提问才能算点踩率）
+  cmd: jq -r 'select(.action=="thumb_down") | .query_id' feedback/events-2026-10-*.jsonl | sort | uniq -c | sort -rn | head -50
+- hint: 把一周反馈聚合成 bad case 并归因到链路环节
+  cmd: python -m feedback.triage --events feedback/events-2026-10-*.jsonl --signals thumb_down,requery,followup,zero_cite_click --out badcases/2026-10-17.jsonl
+- hint: 影子流量对比——新链路与现网用同一 judge 评
+  cmd: python -m eval.shadow --shadow-log logs/shadow-2026-10-18.jsonl --live-log logs/live-2026-10-18.jsonl --judge configs/judge.yaml --out reports/shadow.json
+- hint: 灰度 A/B 判定（含护栏指标与显著性）
+  cmd: python -m eval.ab --a buckets/a.jsonl --b buckets/b.jsonl --metric faithfulness --guardrails latency_p95,false_refusal_rate --alpha 0.05
+- hint: bad case 回流成新题（只加不删、要求人工重标 gold、bump 版本）
+  cmd: python -m evalset.append --evalset evalset/gold-v1.jsonl --new badcases/new-questions.jsonl --require-human-gold --bump minor --out evalset/gold-v1.1.jsonl

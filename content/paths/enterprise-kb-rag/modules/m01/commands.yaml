@@ -1,0 +1,8 @@
+- hint: 估语料规模（先要数量级，不要一上来精确统计）
+  cmd: du -sh /path/to/corpus && find /path/to/corpus -type f | wc -l
+- hint: 文件类型分布（决定解析方案与工作量）
+  cmd: find /path/to/corpus -type f | sed 's/.*\.//' | sort | uniq -c | sort -rn | head -20
+- hint: 抽查 PDF 是否含文本层（输出字符数极小即为扫描件）
+  cmd: 'for f in $(find . -name "*.pdf" | head -20); do printf "%8s  %s\n" "$(pdftotext "$f" - 2>/dev/null | wc -c)" "$f"; done'
+- hint: 语料最近更新时间与维护者（git 托管时用这条代替访谈）
+  cmd: git log -1 --format='%ci %an' -- docs/

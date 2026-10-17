@@ -1,16 +1,22 @@
-import { useMemo, useState } from "react";
-import type { PathContent } from "@aiforge/content-schema";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
+import type { PathMeta } from "@aiforge/content-schema";
 import { cardMastery, evaluateCompletion } from "@aiforge/logic";
-import { quizKey, cardKey, commandKey } from "../lib/keys.ts";
+import { quizKey, cardKey, checkKey, commandKey } from "../lib/keys.ts";
 import type { useProgress } from "../hooks/useProgress.ts";
 
 type Progress = ReturnType<typeof useProgress>;
 
-export default function Quiz({ path, progress }: { path: PathContent; progress: Progress }) {
+function Quiz({ path, progress, onGoTab }: { path: PathMeta; progress: Progress; onGoTab?: (tab: string) => void }) {
   const { quiz, cards, commands, checklist, gradeQuiz } = progress;
   const [copied, setCopied] = useState(false);
   /** 剪贴板不可用时的降级：展示可手动复制 的只读文本块 */
   const [fallbackText, setFallbackText] = useState<string | null>(null);
+  /** 题列表筛选（30 天路径聚合后是长列表，需要「只看没答的」） */
+  const [filter, setFilter] = useState<"all" | "unanswered" | "unknown">("all");
+
+  /* 「已复制」提示的定时器在卸载/切 tab 后仍会 setState，这里统一清理 */
+  const copyTimer = useRef<number | null>(null);
+  useEffect(() => () => { if (copyTimer.current) window.clearTimeout(copyTimer.current); }, []);
 
   const flat = useMemo(() => {
     const out: Array<{ key: string; q: string; a: string; moduleTitle: string }> = [];
@@ -34,7 +40,7 @@ export default function Quiz({ path, progress }: { path: PathContent; progress: 
       }
       for (let i = 0; i < m.checklist.length; i++) {
         checksTotal++;
-        if (checklist[`${path.id}:${m.id}:${i}`]) checks++;
+        if (checklist[checkKey(path.id, m, i)]) checks++;
       }
     }
     return evaluateCompletion({
@@ -45,8 +51,21 @@ export default function Quiz({ path, progress }: { path: PathContent; progress: 
     });
   }, [path, flat, quiz, cards, commands, checklist]);
 
-  if (!flat.length) return <p className="empty">本路径没有面试题</p>;
+  if (!flat.length) return (
+    <div>
+      <h2 className="card__title">面试自测</h2>
+      <p className="empty">本路径没有面试题
+        {onGoTab && <> · <button className="btn" onClick={() => onGoTab("path")}>回到学习路径</button></>}
+      </p>
+    </div>
+  );
   const known = flat.filter((x) => quiz[x.key] === "known").length;
+  const answered = flat.filter((x) => quiz[x.key]).length;
+
+  /* 筛选后的题目（保留原始题号，方便和内容侧对照） */
+  const shown = flat
+    .map((item, i) => ({ item, no: i + 1 }))
+    .filter(({ item }) => filter === "all" || (filter === "unanswered" ? !quiz[item.key] : quiz[item.key] === "unknown"));
 
   const partOf = (k: "quiz" | "cards" | "commands" | "checklist") =>
     completion.parts.find((p) => p.key === k)?.ratio ?? 0;
@@ -71,7 +90,8 @@ export default function Quiz({ path, progress }: { path: PathContent; progress: 
     try {
       await navigator.clipboard.writeText(proofText);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimer.current) window.clearTimeout(copyTimer.current);
+      copyTimer.current = window.setTimeout(() => setCopied(false), 2000);
     } catch {
       setFallbackText(proofText);
     }
@@ -117,9 +137,21 @@ export default function Quiz({ path, progress }: { path: PathContent; progress: 
         )}
       </div>
 
-      <div className="stat-grid" style={{ marginBottom: "var(--space-4)" }}>
+      <div className="stat-grid" style={{ marginBottom: "var(--space-3)" }}>
         <div className="stat-tile"><div className="stat-tile__value">{known}/{flat.length}</div><div className="stat-tile__label">已掌握</div></div>
         <div className="stat-tile"><div className="stat-tile__value">{Math.round((known / flat.length) * 100)}%</div><div className="stat-tile__label">掌握率</div></div>
+      </div>
+
+      {/* 长列表筛选：只看没答的，避免在几十道题里滚动找 */}
+      <div className="filter-chips" role="group" aria-label="题目筛选">
+        {([
+          ["all", `全部 ${flat.length}`],
+          ["unanswered", `未作答 ${flat.length - answered}`],
+          ["unknown", `不熟 ${flat.filter((x) => quiz[x.key] === "unknown").length}`],
+        ] as const).map(([k, label]) => (
+          <button key={k} className={`chip chip--action ${filter === k ? "chip--on" : ""}`}
+            aria-pressed={filter === k} onClick={() => setFilter(k)}>{label}</button>
+        ))}
       </div>
 
       <details className="quiz-item">
@@ -131,11 +163,16 @@ export default function Quiz({ path, progress }: { path: PathContent; progress: 
         </p>
       </details>
 
-      {flat.map((item) => {
+      {shown.length === 0 && <p className="empty">这个筛选下没有题目</p>}
+
+      {shown.map(({ item, no }) => {
         const g = quiz[item.key];
         return (
           <div className="quiz-item" key={item.key}>
-            <p className="quiz-item__q">{item.q}</p>
+            <p className="quiz-item__q">
+              <span className="quiz-item__no" aria-hidden="true">{no}</span>
+              {item.q}
+            </p>
             <details>
               <summary style={{ cursor: "pointer", color: "var(--text-secondary)", minHeight: 44, display: "flex", alignItems: "center" }}>
                 展开参考答案
@@ -156,3 +193,6 @@ export default function Quiz({ path, progress }: { path: PathContent; progress: 
     </>
   );
 }
+
+/* 五个 tab 常驻挂载：memo 配合 App 里的稳定回调，切 tab 时只重渲染目标面板 */
+export default memo(Quiz);

@@ -1,0 +1,21 @@
+- id: day02-c1
+  front: 分层反馈链该按什么排序？
+  back: 按「否决率 ÷ 单位成本」——每花一秒能挡掉多少不该进主干的东西。顺序是 lint/格式化 → 类型 → 单测 → 集成 → 契约 → e2e。上一层能挡的绝不留到下一层；否决率长期趋近 0 的层是仪式，应删掉或挪到 nightly。
+- id: day02-c2
+  front: 「快检查必须先跑且必须阻断」里，最常被搞混的是哪两件事？
+  back: '把「阻断合并」和「阻断关键路径」混成一件。正解是让 lint 作为 required job 阻断合并，同时用 needs 让 unit 立刻并行起步，最后再校验 lint 的结论。e2e 应挂在链尾或设为 when: manual，绝不能挡住 unit。'
+- id: day02-c3
+  front: parallel:matrix 的资源代价怎么算？Actions 的对应写法是什么？
+  back: 矩阵是乘法展开，各维度相乘即 job 总数（3 SUITE × 2 NODE = 6）。每加一个维度就多吃一份 runner 并发，打满时的症状是长时间 pending 而不是失败。Actions 用 strategy.matrix，可用 exclude 排除无效组合，GitLab 侧没有内置排除，只能靠命名或 rules。
+- id: day02-c4
+  front: rules:changes 最常见的坑是什么？
+  back: 在没有可比较基线的 pipeline 里恒为真——新分支首次 push、tag pipeline、scheduled / multi-project pipeline 都属此类。于是「没改就不跑」在部分场景变成「没改也跑」。必须配显式兜底规则，或改用构建图工具（Nx affected、Turborepo --filter）算 affected 集合。
+- id: day02-c5
+  front: flake 为什么不能靠 retry 解决？
+  back: 'retry 用在 script_failure 或 when: always 上，只是降低发现问题的概率，什么也没修。正确用法是精确到 runner_system_failure / stuck_or_timeout_failure 这类基础设施抖动。治理路径为识别 → 隔离到带 owner 与 deadline 的 quarantine → 根治 → 归位。'
+- id: day02-c6
+  front: 覆盖率总门禁为什么容易被绕过？
+  back: 总量阈值会催生无断言测试（跑过即算行覆盖）；掉一点就 fail 会让团队去写 istanbul ignore / c8 ignore 注释，门禁的最终产物变成忽略注释；只卡总量不管新增时，新增代码覆盖率 0% 也能被存量撑住。有效形态是 diff / patch coverage，并把覆盖率与用例数一起看。
+- id: day02-c7
+  front: needs 指向一个 parallel:matrix 的 job 时会发生什么？
+  back: 它会等待该矩阵的全部实例完成，分层链因此退化成栅栏，下游被最慢的实例拖住。要只依赖其中部分实例，用 needs:parallel:matrix 显式列出需要的矩阵组合。

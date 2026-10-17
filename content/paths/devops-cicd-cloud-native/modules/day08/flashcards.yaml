@@ -1,0 +1,24 @@
+- id: day08-c1
+  front: tag 和 digest 的本质区别是什么？为什么说「tag 会骗人」？
+  back: 'tag 是一个可被覆盖的指针——同一个 tag 今天指向镜像 A，明天重推后静默指向镜像 B，所有引用它的部署清单都会跟着换制品。digest 是内容寻址（sha256:…），由镜像内容算出，内容变则 digest 必变、无法伪造。原则：人读 tag，机器认 digest。'
+- id: day08-c2
+  front: 为什么制品晋升必须按 digest，而不是按 tag 或「重新构建」？
+  back: '晋升的唯一定义是把已验证过的同一个制品原样搬到下一环境。按 tag 搬会因覆盖而漂移；重新构建会因基础镜像/依赖/构建环境变化产出从未被测过的二进制。只有按 digest 晋升，才能保证 prod 跑的就是 dev/staging 验过的那一份。'
+- id: day08-c3
+  front: 多架构镜像晋升时，该引用哪种 digest？
+  back: '引用 index（manifest list）digest，即顶层那张清单的 digest，而不是某个单架构镜像的 digest。单架构 digest 会让另一个架构的节点拿到不合适或缺失的层。部署清单写 image@sha256:<index-digest>，搬运时用 skopeo copy --all 带上全部平台。'
+- id: day08-c4
+  front: 一套「不可变 tag」命名规则可以怎么写？
+  back: 'prod 用 <semver>（如 1.4.0）、staging 用 <semver>-rc.<n>、dev 用 <branch>-<short-sha>。硬规则是一个 tag 一旦推送过永不复用；做不到全平台强制时至少打开平台侧的 tag 不可变/受保护开关，并在 CI 里拒绝覆盖已存在的 tag。'
+- id: day08-c5
+  front: 如何检测「为生产重新构建一次」造成的漂移？
+  back: '内核只有一个：比对 digest。CI 构建后立刻 crane digest 记录值并存为产物；部署前断言目标环境里那个 tag 的 digest 等于记录值（test A = B || exit 1）。再加两道闸：prod 仓库对 CI 只给搬运权限、部署清单钉死 digest 并走显式可审计提交。'
+- id: day08-c6
+  front: registry 布局的三种常见形态及各自代价？
+  back: '① 单仓多 tag（环境靠前缀）——简单，但权限无法按环境隔离，误覆盖波及全部环境；② 一组件一仓、环境靠凭证——推荐的默认；③ 一环境一仓、晋升靠搬运 digest——隔离最强但账单翻倍，适合强合规。原则是按权限与爆炸半径选，而不是按好看。'
+- id: day08-c7
+  front: 镜像仓库的保留与容量治理要做哪几件事？
+  back: '只保留有意义的 tag（prod 的 semver 永久、dev 的 branch-sha 保留最近 N 个或超 X 天删除）；用平台清理策略（GitLab cleanup policy，GHCR 需自建）；删 tag 用 regctl tag rm 等；把仓库存储用量、tag 数、最老 tag 年龄当作指标和流水线看板放一起看。'
+- id: day08-c8
+  front: GitLab Container Registry 与 GHCR 在「不可变」和「清理」上差在哪？
+  back: 'GitLab 提供 tag 不可变/protected tags 设置与项目级 cleanup policy；GHCR 长期没有等价的 tag 不可变内建开关，清理也要靠 Actions/API 自建。差异只在平台是否替你提供了开关——原则（tag 会骗人、按 digest 晋升）两端都成立，GHCR 侧必须把纪律写进流水线。'

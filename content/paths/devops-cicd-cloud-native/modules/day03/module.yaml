@@ -1,0 +1,20 @@
+id: day03
+title: 缓存与构建加速
+goal: 把流水线从「每次全量重来」变成「只算变化的部分」
+order: 3
+track: 轨道 1 · 流水线主干与 CI 内嵌能力
+read: 18
+lab: 30
+concepts:
+  - cache vs artifacts：语义完全不同
+  - cache key 设计：分支/锁文件/工具链版本
+  - monorepo 的锁文件哈希与目录级缓存
+  - BuildKit 缓存后端：registry / S3 / 本地，cache-from/to
+  - 多架构下的缓存：按平台分键，别互相污染
+  - 缓存投毒与「假命中」：什么时候必须禁用缓存
+checklist:
+  - 能设计一个不会假命中的 cache key
+  - 能说明 cache 与 artifacts 各自的失效与清理策略
+  - 能配置 registry 作为 BuildKit 的远程缓存后端
+  - 能识别缓存投毒风险并给出缓解措施
+  - 能给出本项目的缓存矩阵（什么缓存、存哪、key 是什么、含不含平台维度）

@@ -1,0 +1,8 @@
+- hint: 校验 .gitlab-ci.yml 语法（官方 CLI，注意只查语法不查语义）
+  cmd: glab ci lint .gitlab-ci.yml
+- hint: 查看当前分支最近一次流水线状态
+  cmd: glab ci status
+- hint: 在本地按 .gitlab-ci.yml 跑 job（需本地 docker）
+  cmd: npx gitlab-ci-local
+- hint: 本地只跑某 job 及其依赖，验证 needs 依赖链
+  cmd: npx gitlab-ci-local --needs build:a

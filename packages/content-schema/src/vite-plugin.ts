@@ -7,10 +7,14 @@
  * 让包保持零运行时依赖、typecheck 不要求装 vite（web 侧装了就有完整类型）。
  */
 import { resolve } from "node:path";
-import { loadPaths } from "./load.ts";
+import { loadContent } from "./load.ts";
 
 const VIRTUAL_ID = "virtual:aiforge-content";
 const RESOLVED_ID = "\0" + VIRTUAL_ID;
+/** 正文单独成模块：应用只对 virtual:aiforge-content 做静态 import，
+ *  对 docs 做动态 import —— 于是正文被 Rollup 切进独立 chunk，首屏不加载。 */
+const DOCS_ID = "virtual:aiforge-content/docs";
+const DOCS_RESOLVED_ID = "\0" + DOCS_ID;
 
 /** dev server 的最小结构类型（moduleGraph 失效缓存需要） */
 interface DevServer {
@@ -33,10 +37,12 @@ interface MinimalPlugin {
 
 export function contentPlugin(contentRoot: string = resolve(process.cwd(), "../../content")): MinimalPlugin {
   const contentRootNorm = contentRoot.replaceAll("\\", "/");
-  let data = "";
+  let metaCode = "";
+  let docsCode = "";
   const build = (): number => {
-    const paths = loadPaths(contentRoot);
-    data = `export const paths = ${JSON.stringify(paths)};\nexport default paths;`;
+    const { paths, docs } = loadContent(contentRoot);
+    metaCode = `export const paths = ${JSON.stringify(paths)};\nexport default paths;`;
+    docsCode = `export const docs = ${JSON.stringify(docs)};\nexport default docs;`;
     return paths.length;
   };
 
@@ -52,10 +58,12 @@ export function contentPlugin(contentRoot: string = resolve(process.cwd(), "../.
     },
     resolveId(id: string) {
       if (id === VIRTUAL_ID) return RESOLVED_ID;
+      if (id === DOCS_ID) return DOCS_RESOLVED_ID;
       return undefined;
     },
     load(id: string) {
-      if (id === RESOLVED_ID) return data;
+      if (id === RESOLVED_ID) return metaCode;
+      if (id === DOCS_RESOLVED_ID) return docsCode;
       return undefined;
     },
     handleHotUpdate({ file, server }) {
@@ -65,8 +73,10 @@ export function contentPlugin(contentRoot: string = resolve(process.cwd(), "../.
       build();
       // 关键：失效 moduleGraph 里虚拟模块的 transform 缓存——
       // 只发 full-reload 而不失效缓存，浏览器 reload 后拿到的仍是旧数据（假刷新）
-      const mod = server.moduleGraph.getModuleById(RESOLVED_ID);
-      if (mod) server.moduleGraph.invalidateModule(mod);
+      for (const id of [RESOLVED_ID, DOCS_RESOLVED_ID]) {
+        const mod = server.moduleGraph.getModuleById(id);
+        if (mod) server.moduleGraph.invalidateModule(mod);
+      }
       server.ws.send({ type: "full-reload" });
     },
   };

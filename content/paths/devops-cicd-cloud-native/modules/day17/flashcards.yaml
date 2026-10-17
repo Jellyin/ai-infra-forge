@@ -1,0 +1,21 @@
+- id: day17-c1
+  front: gang scheduling 是什么？分布式训练里不用它会怎样？
+  back: '成组调度：一组 worker 要么全部就位、要么一个都不占资源。默认 kube-scheduler 逐 Pod 调度，可能 worker-0 拿到 GPU、worker-1 留 Pending，导致所有 worker 卡在 allreduce 死等。实现：Volcano PodGroup（minMember）、scheduler-plugins coscheduling、Kueue 做准入排队。'
+- id: day17-c2
+  front: Argo Workflows / Kubeflow Pipelines / Volcano 各自定位是什么？
+  back: 'Argo Workflows：通用 DAG 编排，每步一个 Pod，强于 artifacts/重试/Cron。KFP：ML pipeline（Python SDK 编译，DAG 引擎通常基于 Argo），强于组件复用与实验/元数据管理。Volcano：批调度器，强于 gang scheduling、队列与配额。三者不互斥，常见组合是上层 DAG + 下层 Volcano/Kueue。'
+- id: day17-c3
+  front: 数据集与 checkpoint 的存储选型差异？
+  back: '数据集是「一次写、多 epoch 顺序读」——对象存储 + 缓存层（Alluxio/Fluid/节点 NVMe）。checkpoint 是「每 N 步的突发高带宽写」——并行文件系统，或本地 NVMe 同步写 + 异步上传对象存储。把 checkpoint 同步写到对象存储会拖垮训练。'
+- id: day17-c4
+  front: 训练 step 的重试策略要区分哪两类失败？
+  back: '基础设施类（可重试）：Pod 被抢占、节点故障、掉卡——重建并从 checkpoint resume。业务类（不可重试）：脚本 bug、数据污染、配置错误、OOM——快速失败并告警，重试只浪费 GPU。重试的价值取决于 checkpoint：没有 checkpoint，重试等于从头再跑。'
+- id: day17-c5
+  front: 把模型变成「一等制品」的两条路线，共同要点是什么？
+  back: '路线一：模型注册表（MLflow Model Registry 等），用 models:/name@alias 引用。路线二：OCI 制品（oras push），用 registry/name@sha256 引用。共同要点：内容寻址（digest）+ 引用不可变；跨环境晋级是搬运 digest/别名引用，而不是拷贝共享盘上的文件。'
+- id: day17-c6
+  front: 评估要变成流水线门禁，需要哪三步？
+  back: '① 评估输出机器可读的指标（JSON artifact，不是 stdout 表格）；② 门禁步骤把候选与固定基线（上一个 champion）或绝对阈值比较；③ 不达标就非零退出，阻断制品晋级。坑：小评估集差异是噪声、基线必须固定、多指标要定谁一票否决。'
+- id: day17-c7
+  front: 为什么评估门禁不该只卡「整体 accuracy」？
+  back: '整体指标会掩盖分群/尾部退化：某一敏感子群可能显著变差而整体几乎不变。门禁要覆盖分群/公平性指标，并注意评估集太小时的噪声——要么扩集、要么要求显著性，而不是卡死单个数字。'
