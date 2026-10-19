@@ -23,7 +23,7 @@ jobs:
       # 所有 action 固定到完整 commit SHA（标签可被强制重指向 / 仓库可被攻陷，
       # 而 deploy job 持有发布权限，供应链投毒可直接篡改对全体访客的站点）。
       # 升级用 dependabot（见 .github/dependabot.yml），不改回可变标签。
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         # 版本由 package.json 的 packageManager 唯一声明
