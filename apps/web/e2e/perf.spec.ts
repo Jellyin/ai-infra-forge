@@ -189,10 +189,14 @@ test("P2 · 闪卡评分交互延迟（真实内容 39 卡）", async ({ page })
 
 test("P3a · 逻辑层：页面内 buildCardQueue · 1000 卡", async ({ page }) => {
   await page.goto("/");
-  const q = await page.evaluate(async (mockSrc) => {
+  // 路径由测试文件位置推导（可移植到 CI/其他机器，含带空格的路径）；
+  // vite dev 下 /@fs 可加载仓库内任意源码模块（与组件 import 的是同一份 TS 源码），
+  // 且不随 dev server 的 base 变化。
+  const { fileURLToPath } = await import("node:url");
+  const logicPath = fileURLToPath(new URL("../../../packages/logic/src/index.ts", import.meta.url));
+  const q = await page.evaluate(async ({ mockSrc, logicPath }) => {
     const mock = (0, eval)(mockSrc);
-    // vite dev 下 /@fs 可加载仓库内任意源码模块（与组件 import 的是同一份 TS 源码）
-    const mod = await import("/@fs/Users/lv/ai-infra-forge/packages/logic/src/index.ts");
+    const mod = await import(`/@fs${logicPath}`);
     const flat = [];
     for (const m of mock.modules) for (const c of m.flashcards) {
       flat.push({ key: "bench-path:" + m.id + ":" + c.id, front: c.front, back: c.back, moduleTitle: m.title });
@@ -210,7 +214,7 @@ test("P3a · 逻辑层：页面内 buildCardQueue · 1000 卡", async ({ page })
     }
     out.sort((a, b) => a - b);
     return { median: out[50], p95: out[95], n: flat.length };
-  }, MOCK_1000_SRC).catch((e: unknown) => ({ error: String(e) }));
+  }, { mockSrc: MOCK_1000_SRC, logicPath }).catch((e: unknown) => ({ error: String(e) }));
   if ("error" in q) console.log(`  [3a] FAILED: ${q.error}`);
   else console.log(`  [3a] buildCardQueue · ${q.n} 卡: 中位 ${q.median.toFixed(3)}ms · p95 ${q.p95.toFixed(3)}ms`);
   await resetProgress(page);
@@ -360,8 +364,12 @@ test("P5 · 勾选清单 → 组件树重渲染（勾选 → checked 上屏）",
 
 test("P6 · renderMarkdown 单次 parse（页面上下文）", async ({ page }) => {
   await page.goto("/");
-  const res = await page.evaluate(async () => {
-    const mod = await import("/src/components/markdown.ts");
+  // 同 P3a：/@fs + 由测试文件位置推导的绝对路径，不依赖 dev server 的 base。
+  // 之前写的根绝对路径 "/src/..." 在 base 被切到子路径时会直接 404。
+  const { fileURLToPath } = await import("node:url");
+  const markdownPath = fileURLToPath(new URL("../src/components/markdown.ts", import.meta.url));
+  const res = await page.evaluate(async (markdownPath) => {
+    const mod = await import(`/@fs${markdownPath}`);
     const block = [
       "## 小节标题",
       "正文段落 " + "文字内容 ".repeat(30),
@@ -386,7 +394,7 @@ test("P6 · renderMarkdown 单次 parse（页面上下文）", async ({ page }) 
       typicalBytes: typical.length, typicalMs: run(typical, 200),
       bigBytes: big.length, bigMs: run(big, 20),
     };
-  });
+  }, markdownPath);
   console.log(`  典型 guide ~${(res.typicalBytes / 1024).toFixed(1)}KB: ${res.typicalMs.toFixed(2)} ms/parse`);
   console.log(`  压力文档 ~${(res.bigBytes / 1024).toFixed(1)}KB: ${res.bigMs.toFixed(2)} ms/parse`);
 });
