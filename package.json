@@ -16,7 +16,7 @@
     "validate:content": "pnpm --filter @aiforge/content-schema run validate"
   },
   "devDependencies": {
-    "@types/node": "^26.6.3",
+    "@types/node": "^26.6.5",
     "js-yaml": "^4.1.0",
     "typescript": "^5.5.0"
   }
